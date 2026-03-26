@@ -81,22 +81,20 @@
 
                 <td width="20%" style="border:none;text-align:right">
 
-                    @if($data->is_e_invoice)
-
-                    <img src="https://router.mastersindia.co/api/v1/einvoice/qrcode/{{ $data->Irn }}" style="width:120px">
-
+                    @if ($data->is_e_invoice)
+                    <img src="https://router.mastersindia.co/api/v1/einvoice/qrcode/amFuX21hcl8yMDI1LTI2-699d9c1aff8a237edc26a3da/"
+                        style="width: 120px">
                     @endif
-
                     <br>
 
                     <div style="
-                border:1px solid black;
-                display:inline-block;
-                padding:4px 15px;
-                margin-top:5px;
-                font-weight:bold;
-                box-shadow:2px 2px 0px #000;
-                ">
+                            border:1px solid black;
+                            display:inline-block;
+                            padding:4px 15px;
+                            margin-top:5px;
+                            font-weight:bold;
+                            box-shadow:2px 2px 0px #000;
+                            ">
 
                         TAX INVOICE
 
@@ -226,8 +224,11 @@
                     <th>HSN</th>
                     <th>Qty</th>
                     <th>Rate</th>
+                    @if($type != 'without')
+
                     <th>Disc</th>
                     <th>Sp Disc</th>
+                    @endif
                     <th>Price</th>
                     <th>Taxable Amt.</th>
                     <th>CGST + SGST</th>
@@ -286,9 +287,10 @@
 
                     <td class="right">{{ number_format($item->price,2) }}</td>
 
+                    @if($type != 'without')
                     <td class="right">{{ $item->discount }}%</td>
-
                     <td class="right">{{ number_format($item->special_discount,2) }}</td>
+                    @endif
 
                     <td class="right">{{ number_format($price,2) }}</td>
 
@@ -317,8 +319,9 @@
 
                 <tr>
 
-                    <td colspan="10" class="right"><strong>SUB TOTAL</strong></td>
-
+                    <td colspan="{{ $type != 'without' ? 10 : 8 }}" class="right">
+                        <strong>SUB TOTAL</strong>
+                    </td>
                     <td class="right">{{ number_format($total_taxable,2) }}</td>
 
                     <td class="right">{{ number_format($total_gst,2) }}</td>
@@ -329,8 +332,9 @@
 
                 <tr>
 
-                    <td colspan="12" class="right"><strong>GRAND TOTAL</strong></td>
-
+                    <td colspan="{{ $type != 'without' ? 12 : 10 }}" class="right">
+                        <strong>GRAND TOTAL</strong>
+                    </td>
                     <td class="right"><strong>{{ number_format($grand_total,2) }}</strong></td>
 
                 </tr>
