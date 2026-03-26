@@ -1,0 +1,5 @@
+ALTER TABLE `customers` CHANGE `company_id` `company` TEXT NULL DEFAULT NULL;
+
+ALTER TABLE `products` ADD `gst` DECIMAL(10,2) NOT NULL DEFAULT '0' AFTER `raw_material`;
+
+ALTER TABLE `users` ADD `user_name` TEXT NOT NULL AFTER `role_id`;
