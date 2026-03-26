@@ -130,8 +130,8 @@
                                     style="border: solid 1px; padding: 3px; font-size:11px ; color:#393186; width: 60px">
                                     Qty</th>
 
-                                @if (request('type') != 'without')
-                                <th scope="col"
+                       
+                                {{-- <th scope="col"
                                     style="border: solid 1px; padding: 3px; font-size:11px; color:#393186; text-align: right  ">
                                     Rate/Pcs
 
@@ -146,8 +146,8 @@
                                 <th scope="col"
                                     style="border: solid 1px; padding: 3px; font-size:11px ; color:#393186;; text-align: right ">
                                     Spc. Disc.
-                                </th>
-                                @endif
+                                </th> --}}
+                           
 
                                 <th scope="col"
                                     style="border: solid 1px; padding: 3px; font-size:11px ; color:#393186;; text-align: right ">
@@ -252,29 +252,24 @@
                                     {{ number_format_indian($item->qty) }}
                                 </td>
 
-                                @if (request('type') != 'without')
-                                <td
+                  
+                                {{-- <td
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
                                     {{ number_format_indian($item->price, 2) }}
-                                </td>
+                                </td> --}}
 
-                                <td
+                                {{-- <td
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
                                     {{ $item->discount }} % <br>
                                     {{ $discount_price }}
                                 </td>
-                                {{--@if ($po_mst->is_invoice == 0 && $po_mst->status != 'cancel') --}}
-                                <td style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right"
-                                    contenteditable="true" data-id="{{ $item->id }}"
-                                    class="updateValue" data-field="discount">
-                                    <!-- {{ $item->special_discount }} -->
-                                </td>
-                                @else
+                               
+                         
                                 <td
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
                                     {{ $item->special_discount }}
                                 </td>
-                                @endif
+                    --}}
                                 {{-- @endif--}}
 
                                 <td
@@ -318,15 +313,11 @@
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;;  ">
                                     {{ number_format_indian($total_qty) }}
                                 </td>
-                                @if (request('type') != 'without')
-                                <td colspan="4">
-
-                                </td>
-                                @else
+                               
                                 <td colspan="1">
 
                                 </td>
-                                @endif
+                          
 
                                 <td
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
@@ -346,7 +337,7 @@
 
 
                             <tr>
-                                <td @if (request('type')=='without' ) colspan="9" @else colspan="12" @endif
+                                <td colspan="9"  
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
                                     Grand Total
                                 </td>
@@ -356,7 +347,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td @if (request('type')=='without' ) colspan="9" @else colspan="12" @endif
+                                <td   colspan="9" 
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
                                     Round OFF
                                 </td>

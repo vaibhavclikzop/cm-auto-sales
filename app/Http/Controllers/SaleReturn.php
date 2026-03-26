@@ -135,7 +135,7 @@ class SaleReturn extends Controller
                 "b.hsn_code",
                 "c.name as uom",
                 "f.price",
-                "f.discount",
+                "g.discount",
 
                 "f.discount as special_discount",
                 "g.gst"
@@ -151,9 +151,10 @@ class SaleReturn extends Controller
                     ->on("f.product_id", "=", "a.product_id");
             })
 
-            ->join("order_det as g", function ($join) {
-                $join->on("g.product_id", "=", "a.product_id");
-            })
+               ->join("order_det as g", function ($join) {
+        $join->on("g.product_id", "=", "a.product_id")
+             ->on("g.mst_id", "=", "e.order_id"); // 🔥 fix here
+    })
 
             ->where("a.mst_id", $id)
             ->get();

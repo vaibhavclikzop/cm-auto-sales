@@ -51,7 +51,7 @@
 
                 <td width="20%" style="border:none">
 
-                    <!-- <img src="{{ public_path('logo/'.$data->img) }}" style="width:120px"> -->
+                    <!-- <img src="{{ public_path('logo/' . $data->img) }}" style="width:120px"> -->
 
                 </td>
 
@@ -82,11 +82,12 @@
                 <td width="20%" style="border:none;text-align:right">
 
                     @if ($data->is_e_invoice && $qr_code)
-                    <img src="{{ $qr_code }}" style="width:120px">
+                        <img src="{{ $qr_code }}" style="width:120px">
                     @endif
                     <br>
 
-                    <div style="
+                    <div
+                        style="
                             border:1px solid black;
                             display:inline-block;
                             padding:4px 15px;
@@ -116,20 +117,16 @@
 
                     <strong>ACK NO & DATE :</strong>
 
-                    @if($data->is_e_invoice)
-
-                    {{ $data->AckNo }} / {{ date('d-m-Y',strtotime($data->AckDt)) }}
-
+                    @if ($data->is_e_invoice)
+                        {{ $data->AckNo }} / {{ date('d-m-Y', strtotime($data->AckDt)) }}
                     @endif
 
                     <br>
 
                     <strong>IRN NO :</strong>
 
-                    @if($data->is_e_invoice)
-
-                    {{ $data->Irn }}
-
+                    @if ($data->is_e_invoice)
+                        {{ $data->Irn }}
                     @endif
 
                 </td>
@@ -223,10 +220,9 @@
                     <th>HSN</th>
                     <th>Qty</th>
                     <th>Rate</th>
-                    @if($type != 'without')
-
-                    <th>Disc</th>
-                    <th>Sp Disc</th>
+                    @if ($type != 'without')
+                        <th>Disc</th>
+                        <th>Sp Disc</th>
                     @endif
                     <th>Price</th>
                     <th>Taxable Amt.</th>
@@ -240,79 +236,72 @@
             <tbody>
 
                 @php
-                $sno=1;
+                    $sno = 1;
 
-                $total_taxable = 0;
-                $total_gst = 0;
-                $grand_total = 0;
+                    $total_taxable = 0;
+                    $total_gst = 0;
+                    $grand_total = 0;
                 @endphp
 
-                @foreach($order_det as $item)
+                @foreach ($order_det as $item)
+                    @php
 
-                @php
+                        $discount_price = $item->price - ($item->price / 100) * $item->discount;
 
-                $discount_price = $item->price - ($item->price/100)*$item->discount;
+                        $special_discount_price = $discount_price - ($discount_price / 100) * $item->special_discount;
 
-                $special_discount_price =
-                $discount_price - ($discount_price/100)*$item->special_discount;
+                        $price = $special_discount_price;
 
-                $price = $special_discount_price;
+                        $taxable_amount = $price * $item->qty;
 
-                $taxable_amount = $price * $item->qty;
+                        $gst_amount = ($taxable_amount / 100) * $item->gst;
 
-                $gst_amount = ($taxable_amount/100)*$item->gst;
+                        $total = $taxable_amount + $gst_amount;
 
-                $total = $taxable_amount + $gst_amount;
+                        $total_taxable += $taxable_amount;
+                        $total_gst += $gst_amount;
+                        $grand_total += $total;
 
-                $total_taxable += $taxable_amount;
-                $total_gst += $gst_amount;
-                $grand_total += $total;
+                    @endphp
 
-                @endphp
+                    <tr>
 
-                <tr>
+                        <td>{{ $sno++ }}</td>
 
-                    <td>{{ $sno++ }}</td>
+                        <td>{{ $item->brand }}</td>
 
-                    <td>{{ $item->brand }}</td>
+                        <td>{{ $item->part_code }}</td>
 
-                    <td>{{ $item->part_code }}</td>
+                        <td>{{ $item->product }}</td>
 
-                    <td>{{ $item->product }}</td>
+                        <td>{{ $item->hsn_code }}</td>
 
-                    <td>{{ $item->hsn_code }}</td>
+                        <td>{{ $item->qty }}</td>
 
-                    <td>{{ $item->qty }}</td>
+                        <td class="right">{{ number_format($item->price, 2) }}</td>
 
-                    <td class="right">{{ number_format($item->price,2) }}</td>
-
-                    @if($type != 'without')
-                    <td class="right">{{ $item->discount }}%</td>
-                    <td class="right">{{ number_format($item->special_discount,2) }}</td>
-                    @endif
-
-                    <td class="right">{{ number_format($price,2) }}</td>
-
-                    <td class="right">{{ number_format($taxable_amount,2) }}</td>
-
-                    <td class="center">
-
-                        @if(strtolower($data->c_state)!=strtolower($data->state))
-
-                        {{ $item->gst }} %
-
-                        @else
-
-                        {{ $item->gst/2 }}% + {{ $item->gst/2 }}%
-
+                        @if ($type != 'without')
+                            <td class="right">{{ $item->discount }}%</td>
+                            <td class="right">{{ number_format($item->special_discount, 2) }}</td>
                         @endif
 
-                    </td>
+                        <td class="right">{{ number_format($price, 2) }}</td>
 
-                    <td class="right">{{ number_format($total,2) }}</td>
+                        <td class="right">{{ number_format($taxable_amount, 2) }}</td>
 
-                </tr>
+                        <td class="center">
 
+                            @if (strtolower($data->c_state) != strtolower($data->state))
+                                {{ $item->gst }} %
+                            @else
+                                {{ $item->gst / 2 }}% + {{ $item->gst / 2 }}%
+                            @endif
+
+                        </td>
+
+                        <td class="right">{{ number_format($total, 2) }}</td>
+
+                    </tr>
                 @endforeach
 
 
@@ -321,11 +310,11 @@
                     <td colspan="{{ $type != 'without' ? 10 : 8 }}" class="right">
                         <strong>SUB TOTAL</strong>
                     </td>
-                    <td class="right">{{ number_format($total_taxable,2) }}</td>
+                    <td class="right">{{ number_format($total_taxable, 2) }}</td>
 
-                    <td class="right">{{ number_format($total_gst,2) }}</td>
+                    <td class="right">{{ number_format($total_gst, 2) }}</td>
 
-                    <td class="right">{{ number_format($grand_total,2) }}</td>
+                    <td class="right">{{ number_format($grand_total, 2) }}</td>
 
                 </tr>
 
@@ -334,22 +323,33 @@
                     <td colspan="{{ $type != 'without' ? 12 : 10 }}" class="right">
                         <strong>GRAND TOTAL</strong>
                     </td>
-                    <td class="right"><strong>{{ number_format($grand_total,2) }}</strong></td>
+                    <td class="right"><strong>{{ number_format($grand_total, 2) }}</strong></td>
 
                 </tr>
+                <tr>
+                    <td @if (request('type') == 'without') colspan="9" @else colspan="12" @endif
+                        style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
+                        Round OFF
+                    </td>
+                    <td
+                        style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
+                        {{ number_format_indian(round($grand_total), 2) }}
+                    </td>
+                </tr>
+
 
             </tbody>
 
         </table>
         @php
-        $sub_total = $grand_total;
+            $sub_total = $grand_total;
         @endphp
 
         <br>
 
         <div class="right">
 
-            <strong>{{ numberToWords(round($sub_total)) }} Rupees Only</strong>
+            <strong> {{ numberToWords(round($grand_total)) }} Rupees Only</strong>
 
         </div>
 
