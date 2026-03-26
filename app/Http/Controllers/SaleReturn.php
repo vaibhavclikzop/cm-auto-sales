@@ -118,7 +118,7 @@ class SaleReturn extends Controller
     public function SaleReturnChallanView(Request $request, $id)
     {
         $po_mst =   DB::table("sale_return_mst as a")
-            ->select("a.*", "b.company as customer", "d.name as user", "b.address", "b.state", "b.city", "b.pincode", "b.number", "b.email", "b.gst", "e.img", "e.name", "e.gst_no", "f.invoice_id","e.state as c_state","f.discount_type")
+            ->select("a.*", "b.company as customer", "d.name as user", "b.address", "b.state", "b.city", "b.pincode", "b.number", "b.email", "b.gst", "e.img", "e.name", "e.gst_no", "f.invoice_id", "e.state as c_state", "f.discount_type")
             ->join("customers as b", "a.customer_id", "b.id")
             ->join("users as d", "a.user_id", "d.id")
             ->join("company as e", "a.company_id", "e.id")
@@ -129,28 +129,34 @@ class SaleReturn extends Controller
         $po_det = DB::table("sale_return_det as a")
             ->select(
                 "a.*",
+                "h.name as brand",
                 "b.name as product_name",
-                "b.part_no",
+                "b.part_no as part_code",
                 "b.hsn_code",
                 "c.name as uom",
                 "f.price",
                 "f.discount",
-    
-                "f.discount as special_discount",
-                "f.gst"
 
+                "f.discount as special_discount",
+                "g.gst"
             )
             ->join("products as b", "a.product_id", "=", "b.id")
+            ->join("brand as h", "b.brand_id", "=", "h.id")
             ->join("unit_type as c", "b.uom", "=", "c.id")
             ->join("sale_return_mst as d", "a.mst_id", "=", "d.id")
             ->join("stock_outward_mst as e", "d.outward_id", "=", "e.id")
+
             ->join("stock_outward_det as f", function ($join) {
                 $join->on("f.mst_id", "=", "e.id")
                     ->on("f.product_id", "=", "a.product_id");
             })
+
+            ->join("order_det as g", function ($join) {
+                $join->on("g.product_id", "=", "a.product_id");
+            })
+
             ->where("a.mst_id", $id)
             ->get();
-
 
         return view("sale-return-challan-view", compact("po_mst", "po_det"));
     }
