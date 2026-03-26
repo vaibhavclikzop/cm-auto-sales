@@ -13,7 +13,7 @@
 
         .main {
             border: 1px solid black;
-            padding: 1px;
+
         }
 
 
@@ -38,6 +38,21 @@
         .right {
             text-align: right;
         }
+   .products > tbody th,
+.products > tbody td {
+ padding: 0px 3px;
+
+}
+.products > tbody th:first-child,
+.products > tbody td:first-child {
+    border-left: none;
+}
+
+.products > tbody th:last-child,
+.products > tbody td:last-child {
+    border-right: none;
+}
+
     </style>
 
 </head>
@@ -45,13 +60,13 @@
 <body>
 
     <div class="main">
-        <table width="100%" style="border:none">
+        <table width="100%" style="border:none;">
 
             <tr style="border:none">
 
                 <td width="20%" style="border:none">
 
-                    <!-- <img src="{{ public_path('logo/' . $data->img) }}" style="width:120px"> -->
+                    <img src="{{ public_path('logo/' . $data->img) }}" style="width:120px">
 
                 </td>
 
@@ -109,7 +124,7 @@
 
             <tr>
 
-                <td style="border:none;width:70%">
+                <td style="border:none;width:70%; padding-left: 7px">
 
                     <strong>INVOICE NO.</strong> : {{ $data->invoice_id }}
 
@@ -141,7 +156,7 @@
 
             <tr>
 
-                <td width="50%">
+                <td width="50%" style="border-left: none;  padding-left: 7px">
 
                     <strong>BILL TO :</strong>
 
@@ -171,7 +186,7 @@
 
                 </td>
 
-                <td width="50%">
+                <td width="50%" style=" padding-left: 7px; border-right: none;">
 
                     <strong>DELIVERY TO :</strong>
 
@@ -205,12 +220,12 @@
 
         </table>
 
-        <br>
 
-        <table>
 
-            <thead>
+        <table class="products">
 
+ 
+          <tbody>
                 <tr>
 
                     <th>S.No</th>
@@ -231,9 +246,9 @@
 
                 </tr>
 
-            </thead>
+ 
 
-            <tbody>
+  
 
                 @php
                     $sno = 1;
@@ -328,11 +343,11 @@
                 </tr>
                 <tr>
                     <td @if (request('type') == 'without') colspan="9" @else colspan="12" @endif
-                        style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
+                        style=" text-align: right">
                         Round OFF
                     </td>
                     <td
-                        style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
+                        style=" text-align: right">
                         {{ number_format_indian(round($grand_total), 2) }}
                     </td>
                 </tr>
@@ -347,7 +362,7 @@
 
         <br>
 
-        <div class="right">
+        <div class="right" style="padding-right: 5px">
 
             <strong> {{ numberToWords(round($grand_total)) }} Rupees Only</strong>
 
@@ -361,7 +376,7 @@
 
             <tr>
 
-                <td>
+                <td style="border-left: none; padding-left: 5px">
 
                     <strong>Our Bank Details</strong>
 
@@ -383,7 +398,7 @@
 
                 </td>
 
-                <td class="right">
+                <td class="right" style="border-right: none; padding-right: 5px">
 
                     {{ $data->name }}
 
@@ -398,8 +413,8 @@
         </table>
 
         <br>
-
-        <strong>Terms & Conditions</strong>
+        
+        <strong style="margin-left: 5px">Terms & Conditions</strong>
 
         <ol>
 
