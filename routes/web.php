@@ -176,7 +176,7 @@ Route::group(['middleware' => ['SuperAdmin']], function () {
   Route::get('inward-report', [InwardStock::class, 'InwardReport'])->name('inward-report');
   Route::get('inward-report-view/{id}', [InwardStock::class, 'InwardReportView'])->name('inward-report-view');
   Route::post('deleteStockInward', [InwardStock::class, 'deleteStockInward'])->name('deleteStockInward');
-
+Route::post('/update-stock-inward',[InwardStock::class,'updateStockInward'])->name('updateStockInward');
 
   Route::get('inward-product-wise', [InwardStock::class, 'inwardProductWise'])->name('inward-product-wise');
   // outward stock routes

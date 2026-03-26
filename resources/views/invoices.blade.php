@@ -71,8 +71,8 @@
                                         value="{{ $item->id }}">Convert to Invoice</button>
                                 @endif
 
-                                {{-- <a class="btn btn-primary btn-success btn-sm" href="/download-invoice/{{$item->id}}"><i class="fa fa-download"
-                                        aria-hidden="true"></i></a> --}}
+                               <a class="btn btn-primary btn-success btn-sm" href="/download-invoice/{{$item->id}}"><i class="fa fa-download"
+                                        aria-hidden="true"></i></a> 
 
                                 <a class="btn btn-dark btn-sm" href="/invoice-view/{{ $item->id }}"><i
                                         class="fa fa-eye" aria-hidden="true"></i></a>

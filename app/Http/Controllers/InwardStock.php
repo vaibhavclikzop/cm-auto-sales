@@ -147,12 +147,24 @@ class InwardStock extends Controller
         return view("inward-report", compact("stock_inward_mst"));
     }
 
+    public function updateStockInward(Request $request)
+    {
+        DB::table('stock_inward_mst')
+            ->where('id', $request->id)
+            ->update([
+                'invoice_no' => $request->invoice_no,
+                'invoice_date' => $request->invoice_date,
+                'received_material_date' => $request->received_material_date,
+                'description' => $request->description
+            ]);
 
+        return redirect()->back()->with('success', 'MRN Updated Successfully');
+    }
     public function InwardReportView(Request $request, $id)
     {
 
         $stock_inward_mst =   DB::table("stock_inward_mst as a")
-            ->select("a.*", "a.invoice_no as inv", "b.name as vendor", "c.name as po_name", "f.name as location", "e.name as user", "d.*", "g.name as warehouse","a.id")
+            ->select("a.*", "a.invoice_no as inv", "b.name as vendor", "c.name as po_name", "f.name as location", "e.name as user", "d.*", "g.name as warehouse", "a.id")
             ->join("vendor as b", "a.vendor_id", "b.id")
             ->leftJoin("po_mst as c", "a.po_id", "c.id")
             ->join("company as d", "a.company_id", "d.id")
@@ -228,7 +240,7 @@ class InwardStock extends Controller
     {
 
         $data =  DB::table("stock_inward_mst as a")
-            ->select("a.*", "b.name as vendor", "c.po_id as po_name", "d.name as location", "e.name as user","g.name as product_name","g.part_no","f.price","f.qty")
+            ->select("a.*", "b.name as vendor", "c.po_id as po_name", "d.name as location", "e.name as user", "g.name as product_name", "g.part_no", "f.price", "f.qty")
             ->join("vendor as b", "a.vendor_id", "b.id")
             ->leftJoin("po_mst as c", "a.po_id", "c.id")
             ->join("store as d", "a.location_id", "d.id")

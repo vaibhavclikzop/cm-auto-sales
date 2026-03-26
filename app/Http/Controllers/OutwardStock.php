@@ -905,55 +905,131 @@ class OutwardStock extends Controller
         return  redirect()->back()->with("success", "Save Successfully");
     }
 
-    public function downloadInvoice(Request $request, $id)
-    {
-        $data =  DB::table("stock_outward_mst as a")
-            ->select("a.*", "c.company as customer_name", "c.address", "c.state", "c.city", "c.pincode", "c.email", "c.number", "c.gst", "b.delivery_date", "d.name as user", "e.gst_no", "e.img", "e.name", "e.address as c_address", "e.email as c_email", "e.name as company_name", "e.state as c_state", "c.state as bill_state", "c.city as bill_city", "c.address as bill_address", "c.pincode as bill_pincode", "c.ship_address", "c.ship_state", "c.ship_city", "c.ship_pincode")
-            ->join("order_mst as b", "a.order_id", "b.id")
-            ->join("customers as c", "b.customer_id", "c.id")
-            ->join("users as d", "a.user_id", "d.id")
-            ->join("company as e", "b.company_id", "e.id")
-            ->where("a.id", $id)
-            ->first();
-        $orderDetSub = DB::table('order_det')
-            ->select(
-                'product_id',
-                'mst_id',
-                DB::raw('MAX(discount) as discount'),
-                DB::raw('MAX(gst) as gst')
-            )
-            ->groupBy('product_id', 'mst_id');
+    // public function downloadInvoice(Request $request, $id)
+    // {
+    //     $data =  DB::table("stock_outward_mst as a")
+    //         ->select("a.*", "c.company as customer_name", "c.address", "c.state", "c.city", "c.pincode", "c.email", "c.number", "c.gst", "b.delivery_date", "d.name as user", "e.gst_no", "e.img", "e.name", "e.address as c_address", "e.email as c_email", "e.name as company_name", "e.state as c_state", "c.state as bill_state", "c.city as bill_city", "c.address as bill_address", "c.pincode as bill_pincode", "c.ship_address", "c.ship_state", "c.ship_city", "c.ship_pincode")
+    //         ->join("order_mst as b", "a.order_id", "b.id")
+    //         ->join("customers as c", "b.customer_id", "c.id")
+    //         ->join("users as d", "a.user_id", "d.id")
+    //         ->join("company as e", "b.company_id", "e.id")
+    //         ->where("a.id", $id)
+    //         ->first();
+    //     $orderDetSub = DB::table('order_det')
+    //         ->select(
+    //             'product_id',
+    //             'mst_id',
+    //             DB::raw('MAX(discount) as discount'),
+    //             DB::raw('MAX(gst) as gst')
+    //         )
+    //         ->groupBy('product_id', 'mst_id');
 
-        $order_det = DB::table("stock_outward_det as a")
-            ->select(
-                "a.*",
-                "b.name as product",
-                "b.part_no as part_code",
-                "e.name as brand",
-                "b.hsn_code",
-                "f.discount",
-                "f.gst",
-                "a.discount as special_discount"
-            )
-            ->join("products as b", "a.product_id", "=", "b.id")
-            ->join("stock_outward_mst as c", "a.mst_id", "=", "c.id")
-            ->join("order_mst as d", "c.order_id", "=", "d.id")
-            ->join("brand as e", "b.brand_id", "=", "e.id")
-            ->joinSub($orderDetSub, 'f', function ($join) {
-                $join->on("a.product_id", "=", "f.product_id")
-                    ->on("d.id", "=", "f.mst_id");
-            })
-            ->where("a.mst_id", $id)
-            ->get();
-        $gst = DB::table("gst")->get();
-    $type = "with";
-       // $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst"));
-        $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst","type")) ->setPaper('a4', 'portrait')
-          ->setOption('isRemoteEnabled', true);
+    //     $order_det = DB::table("stock_outward_det as a")
+    //         ->select(
+    //             "a.*",
+    //             "b.name as product",
+    //             "b.part_no as part_code",
+    //             "e.name as brand",
+    //             "b.hsn_code",
+    //             "f.discount",
+    //             "f.gst",
+    //             "a.discount as special_discount"
+    //         )
+    //         ->join("products as b", "a.product_id", "=", "b.id")
+    //         ->join("stock_outward_mst as c", "a.mst_id", "=", "c.id")
+    //         ->join("order_mst as d", "c.order_id", "=", "d.id")
+    //         ->join("brand as e", "b.brand_id", "=", "e.id")
+    //         ->joinSub($orderDetSub, 'f', function ($join) {
+    //             $join->on("a.product_id", "=", "f.product_id")
+    //                 ->on("d.id", "=", "f.mst_id");
+    //         })
+    //         ->where("a.mst_id", $id)
+    //         ->get();
+    //     $gst = DB::table("gst")->get();
+    //     $type = "with";
+    //     // $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst"));
+    //     $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst", "type"))->setPaper('a4', 'portrait')
+    //         ->setOption('isRemoteEnabled', true);
 
-return $pdf->stream('invoice.pdf');
+    //     return $pdf->stream('invoice.pdf');
+    // }
+    public function downloadInvoice($id)
+{
+    $data =  DB::table("stock_outward_mst as a")
+        ->select(
+            "a.*",
+            "c.company as customer_name",
+            "c.address",
+            "c.state",
+            "c.city",
+            "c.pincode",
+            "c.email",
+            "c.number",
+            "c.gst",
+            "b.delivery_date",
+            "d.name as user",
+            "e.gst_no",
+            "e.img",
+            "e.name",
+            "e.address as c_address",
+            "e.email as c_email",
+            "e.name as company_name",
+            "e.state as c_state",
+            "c.state as bill_state",
+            "c.city as bill_city",
+            "c.address as bill_address",
+            "c.pincode as bill_pincode",
+            "c.ship_address",
+            "c.ship_state",
+            "c.ship_city",
+            "c.ship_pincode"
+        )
+        ->join("order_mst as b", "a.order_id", "b.id")
+        ->join("customers as c", "b.customer_id", "c.id")
+        ->join("users as d", "a.user_id", "d.id")
+        ->join("company as e", "b.company_id", "e.id")
+        ->where("a.id", $id)
+        ->first();
 
+    $orderDetSub = DB::table('order_det')
+        ->select(
+            'product_id',
+            'mst_id',
+            DB::raw('MAX(discount) as discount'),
+            DB::raw('MAX(gst) as gst')
+        )
+        ->groupBy('product_id', 'mst_id');
 
- 
-    }
+    $order_det = DB::table("stock_outward_det as a")
+        ->select(
+            "a.*",
+            "b.name as product",
+            "b.part_no as part_code",
+            "e.name as brand",
+            "b.hsn_code",
+            "f.discount",
+            "f.gst",
+            "a.discount as special_discount"
+        )
+        ->join("products as b", "a.product_id", "=", "b.id")
+        ->join("stock_outward_mst as c", "a.mst_id", "=", "c.id")
+        ->join("order_mst as d", "c.order_id", "=", "d.id")
+        ->join("brand as e", "b.brand_id", "=", "e.id")
+        ->joinSub($orderDetSub, 'f', function ($join) {
+            $join->on("a.product_id", "=", "f.product_id")
+                 ->on("d.id", "=", "f.mst_id");
+        })
+        ->where("a.mst_id", $id)
+        ->get();
+
+    $gst = DB::table("gst")->get();
+
+    $filename = str_replace(['/', '\\'], '-', $data->invoice_id);
+
+$pdf = Pdf::loadView('pdf.invoice-pdf', compact("data","order_det","gst"))
+        ->setPaper('a4','portrait')
+        ->setOption('isRemoteEnabled', true);
+
+return $pdf->download('invoice-'.$filename.'.pdf');
+}
 }
