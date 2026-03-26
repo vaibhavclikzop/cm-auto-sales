@@ -81,9 +81,8 @@
 
                 <td width="20%" style="border:none;text-align:right">
 
-                    @if ($data->is_e_invoice)
-                    <img src="https://router.mastersindia.co/api/v1/einvoice/qrcode/amFuX21hcl8yMDI1LTI2-699d9c1aff8a237edc26a3da/"
-                        style="width: 120px">
+                    @if ($data->is_e_invoice && $qr_code)
+                    <img src="{{ $qr_code }}" style="width:120px">
                     @endif
                     <br>
 

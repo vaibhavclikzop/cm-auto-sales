@@ -1026,9 +1026,29 @@ class OutwardStock extends Controller
 
         $gst = DB::table("gst")->get();
 
+
+        $qr_code = null;
+
+        if ($data->is_e_invoice) {
+
+            $qr_url = "https://router.mastersindia.co/api/v1/einvoice/qrcode/amFuX21hcl8yMDI1LTI2-699d9c1aff8a237edc26a3da/";
+
+            try {
+                $qr_image = file_get_contents($qr_url);
+
+                if ($qr_image) {
+                    $qr_code = 'data:image/png;base64,' . base64_encode($qr_image);
+                }
+            } catch (\Exception $e) {
+                $qr_code = null;
+            }
+        }
+
+
+
         $filename = str_replace(['/', '\\'], '-', $data->invoice_id);
 
-        $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst", "type"))
+        $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst", "type","qr_code"))
             ->setPaper('a4', 'portrait')
             ->setOption('isRemoteEnabled', true);
 
