@@ -1,5 +1,14 @@
 @extends('layouts.main')
 @section('main-section')
+<style>
+    .table-success {
+    background-color: #e6ffe6;
+}
+
+.table-danger {
+    background-color: #ffe6e6;
+}
+</style>
     <div class="card">
         <div class="card-header d-flex justify-content-between">
             <div class="page-title">
@@ -373,74 +382,122 @@
             });
 
 
+$("#BtnUpload").on("click", function() {
 
-            $("#BtnUpload").on("click", function() {
+    let fileInput = document.getElementById('file');
+    let file = fileInput.files[0];
 
-                let fileInput = document.getElementById('file');
-                let file = fileInput.files[0];
-                if (file) {
-                    // Create a new FormData object
-                    let formData = new FormData();
-                    formData.append('file', file);
+    if (file) {
 
-                    $.ajax({
-                        url: "/UploadPORequirementList",
-                        type: "POST",
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(result) {
-                            var row = "";
-                            let sno = 1;
-                            data = JSON.parse(result)
-                            data.data.forEach(element => {
-                                row += `
-                            <tr class="prod${element.id}">
-                            <td>${sno++}</td>
-                            <td colspan="2">${element.name}</td>
-                            <td>${element.qty}</td>
-                           
-                   
-                                <td>${element.purchase_price}</td>
-            
-                                <td>${element.gst}</td>
-                                <td>${element.purchase_price*element.qty}</td>
-                                <td><button onclick="removeItem(${element.qty})" class="btn btn-sm btn-danger" type="button"><i class="fa fa-trash" aria-hidden="true"></i></button></td>
-                            </tr>
-                        `;
+        let formData = new FormData();
+        formData.append('file', file);
 
-                                let product_id = element.id;
-                                let qty = element.qty;
-                                let price = element.price;
-                                let gst = element.gst;
+        $.ajax({
+            url: "/UploadPORequirementList",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
 
-                                product_list.push({
-                                    product_id,
-                                    qty,
-                                    price,
-                                    gst,
+            success: function(result) {
 
+                let data = JSON.parse(result);
 
-                                });
+                let foundRows = "";
+                let notFoundRows = "";
+
+                let sno1 = 1;
+                let sno2 = 1;
+
+                if (data.data && data.data.length > 0) {
+
+                    data.data.forEach(element => {
+
+                        if (element.found) {
+
+                            foundRows += `
+                                <tr class="prod${element.id}">
+                                    <td>${sno1++}</td>
+                                    <td colspan="2">${element.name}</td>
+                                    <td>${element.qty}</td>
+                                    <td>${element.purchase_price}</td>
+                                    <td>${element.gst}</td>
+                                    <td>${element.purchase_price * element.qty}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" type="button">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+
+                            product_list.push({
+                                product_id: element.id,
+                                qty: element.qty,
+                                price: element.purchase_price, // ✅ fix
+                                gst: element.gst,
                             });
 
-                            $('#prodList').append(row);
-                            console.log(product_list);
+                        } else {
 
-                        },
-                        error: function(data) {
-                            console.log(data);
-
+                            notFoundRows += `
+                                <tr class="table-danger">
+                                    <td>${sno2++}</td>
+                                    <td colspan="2">${element.part_no} (${element.name})</td>
+                                    <td>${element.qty}</td>
+                                    <td>NULL</td>
+                                    <td>NULL</td>
+                                    <td>NULL</td>
+                                    <td>-</td>
+                                </tr>
+                            `;
                         }
-                    });
-                } else {
-                    toastr.error("Select CSV file for upload");
-                }
 
-            });
+                    });
+
+                    // ✅ loop ke baad HTML banao
+                    let finalHtml = "";
+
+                    if (foundRows !== "") {
+                        finalHtml += `
+                            <tr class="table-success">
+                                <td colspan="8"><b>Found Products</b></td>
+                            </tr>
+                            ${foundRows}
+                        `;
+                    }
+
+                    if (notFoundRows !== "") {
+                        finalHtml += `
+                            <tr class="table-danger">
+                                <td colspan="8"><b>Not Found Products</b></td>
+                            </tr>
+                            ${notFoundRows}
+                        `;
+                    }
+
+                    $('#prodList').html(finalHtml);
+
+                } else {
+
+                    $('#prodList').html(`
+                        <tr>
+                            <td colspan="8" class="text-center text-danger">
+                                No Data Found
+                            </td>
+                        </tr>
+                    `);
+                }
+            }
+        });
+
+    } else {
+        toastr.error("Select CSV file for upload");
+    }
+});
         });
     </script>
 @endsection

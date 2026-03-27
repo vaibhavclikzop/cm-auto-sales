@@ -600,23 +600,49 @@ class OrderManagement extends Controller
 
             $csv = Reader::createFromPath(storage_path('app/public/' . $filePath), 'r');
             // $csv->setHeaderOffset(0); // Assuming the first row contains headers
-            $data = [];
+            // $data = [];
             foreach ($csv as $record) {
 
                 if ($record[0] == "brand") {
                     continue;
                 }
+            $part_no = $record[1];
+            $name    = $record[2]; 
+            $qty     = $record[3];
 
                 $products = DB::table("products as a")
                     ->select("a.*", "b.name as brand_name")
                     ->join("brand as b", "a.brand_id", "b.id")
                     ->where('a.part_no', $record[1])->first();
                 if ($products) {
-                    $products->qty = $record[3];
+                    // $products->qty = $record[3];
+                     $data[] = [
+                    'id' => $products->id,
+                    'name' => $products->name,
+                    'part_no' => $products->part_no,
+                    'qty' => $qty,
+                    'purchase_price' => $products->purchase_price,
+                    'gst' => $products->gst,
+                    'found' => true
+                ];
                 }
-                $productIds = array_column($data, 'id');
+                 else {
 
-                $data[] = $products;
+                // ✅ NOT FOUND CASE
+                $data[] = [
+                    'id' => null,
+                    'name' => $name, // CSV se
+                    'part_no' => $part_no,
+                    'qty' => $qty,
+                    'purchase_price' => null,
+                    'gst' => null,
+                    'found' => false
+                ];
+            }
+                
+                // $productIds = array_column($data, 'id');
+
+                // $data[] = $products;
             }
             return json_encode(['data' => $data]);
         }

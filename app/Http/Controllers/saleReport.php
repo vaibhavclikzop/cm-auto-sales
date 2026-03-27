@@ -440,15 +440,15 @@ class saleReport extends Controller
         }
 
         $data = $dt
-          ->where(function ($query) use ($fromDate, $toDate) {
+            ->where(function ($query) use ($fromDate, $toDate) {
                 $query->whereBetween(DB::raw("DATE(b.invoice_convert_date)"), [$fromDate, $toDate])
                     ->orWhere(function ($q) use ($fromDate, $toDate) {
                         $q->whereNull("b.invoice_convert_date")
                             ->whereBetween(DB::raw("DATE(b.invoice_date)"), [$fromDate, $toDate]);
                     });
             })
-        
-  
+
+
             ->where("b.store_id", $request->user->active_inventory)
             ->groupBy("a.product_id", "c.name", "c.part_no")
             ->get();
@@ -621,13 +621,14 @@ class saleReport extends Controller
         $outward = DB::table("stock_outward_mst as d")
             ->select(
                 "d.order_id",
+                "d.status",
                 "e.product_id",
                 DB::raw("SUM(CASE WHEN d.is_invoice = 1 THEN e.qty ELSE 0 END) as invoice_qty"),
                 DB::raw("SUM(CASE WHEN d.is_invoice = 0 and d.status !='cancel' THEN e.qty ELSE 0 END) as picked_qty"),
                 DB::raw("SUM(CASE WHEN d.status = 'cancel' and d.is_invoice=0 THEN e.qty ELSE 0 END) as cancel_qty")
             )
             ->join("stock_outward_det as e", "d.id", "e.mst_id")
-            ->groupBy("d.order_id", "e.product_id");
+            ->groupBy("d.order_id", "d.status", "e.product_id");
         $stock = DB::table("current_stock")
             ->select(
                 "product_id",
@@ -672,7 +673,7 @@ class saleReport extends Controller
             ->whereDate("x.created_at", ">=", $fromDate)
             ->whereDate("x.created_at", "<=", $toDate)
             ->where("x.company_id", $request->user->active_inventory)
-            ->where("y.party_code","!=",161)
+            ->where("y.party_code", "!=", 161)
             ->groupBy(
                 "a.product_id",
                 "b.name",
