@@ -102,7 +102,6 @@ class saleReport extends Controller
 
         $customers =  customers::get();
         $city =  DB::table("customers")->select("city1")->distinct("city1")->get();
-
         $data1 = DB::table('stock_outward_mst as a')
             ->select(
                 "a.id as voucher_no",
@@ -113,77 +112,126 @@ class saleReport extends Controller
                 "e.gst as gst_no",
                 DB::raw("'Sale Report' as particular"),
                 DB::raw("'Sales' as voucher_type"),
+
+                // ✅ TOTAL
+                DB::raw("ROUND(SUM(b.price * b.qty), 2) as total"),
+
+                // ✅ DISCOUNT (COMBINED LOGIC)
                 DB::raw("
-                round(sum(
-                ((b.price*b.qty))
-                ),2) as total
-                "),
+            ROUND(SUM(
+                CASE 
+                    WHEN a.discount_type = 'price'
+                        THEN (b.price * b.qty) * ((d.discount + b.discount) / 100)
+                    ELSE (b.price * b.qty) * d.discount / 100
+                END
+            ), 2) as discount
+        "),
+
+                // ✅ DISCOUNT 2 (ONLY WHEN discount_type = discount)
                 DB::raw("
-               round( sum(
-                ((b.price*b.qty/100)*d.discount)
-                ),2) as discount
-                "),
-                DB::raw("
-                round(SUM(
-                     
-                    (
+            ROUND(SUM(
+                CASE 
+                    WHEN a.discount_type = 'price'
+                        THEN 0
+                    ELSE (
                         (
                             (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
+                            - ((b.price * b.qty) * d.discount / 100)
+                        ) * b.discount / 100
                     )
-                ),2) AS discount2
-            "),
+                END
+            ), 2) as discount2
+        "),
+
+                // ✅ TAXABLE
                 DB::raw("
-                round(SUM(
-                    (
-                        (b.price * b.qty)
-                        - ((b.price * b.qty) / 100 * d.discount)
-                    )
-                    -
-                    (
+            ROUND(SUM(
+                ROUND(
+                    CASE 
+                        WHEN a.discount_type = 'price'
+                            THEN
+                                (b.price * b.qty)
+                                - (
+                                    (b.price * b.qty) * ((d.discount + b.discount) / 100)
+                                )
+                        ELSE
+                            (
+                                (b.price * b.qty)
+                                - ((b.price * b.qty) * d.discount / 100)
+                                - (
+                                    (
+                                        (b.price * b.qty)
+                                        - ((b.price * b.qty) * d.discount / 100)
+                                    ) * b.discount / 100
+                                )
+                            )
+                    END
+                , 2)
+            ), 2) as taxable_amount
+        "),
+
+                // ✅ GST TYPE
+                DB::raw("
+            CASE
+                WHEN e.state = f.state THEN 'CGST'
+                ELSE 'IGST'
+            END AS gst_type
+        "),
+
+                // ✅ GST (NO DOUBLE ROUND)
+                DB::raw("
+            ROUND(SUM(
+                CASE 
+                    WHEN a.discount_type = 'price'
+                        THEN
+                            (
+                                (b.price * b.qty)
+                                - (
+                                    (b.price * b.qty) * ((d.discount + b.discount) / 100)
+                                )
+                            ) * d.gst / 100
+                    ELSE
                         (
-                            (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
-                    )
-                ),2) AS taxable_amount
-            "),
-                DB::raw("
-                CASE
-                    WHEN e.state = f.state THEN 'CGST'
-                    ELSE 'IGST'
-                END AS gst_type
-            "),
-                DB::raw("
-            round( SUM(
-                    (((
-                        (b.price * b.qty)
-                        - ((b.price * b.qty) / 100 * d.discount)
-                    )
-                    -
-                    (
-                        (
-                            (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
-                    )))/100*d.gst
-                        
-                ) ,2)AS gst
-            "),
-
-
-
+                            (
+                                (b.price * b.qty)
+                                - ((b.price * b.qty) * d.discount / 100)
+                                - (
+                                    (
+                                        (b.price * b.qty)
+                                        - ((b.price * b.qty) * d.discount / 100)
+                                    ) * b.discount / 100
+                                )
+                            ) * d.gst / 100
+                        )
+                END
+            ), 2) as gst
+        ")
             )
+
             ->join('stock_outward_det as b', 'a.id', '=', 'b.mst_id')
+
             ->join('order_mst as c', 'a.order_id', '=', 'c.id')
-            ->join('order_det as d', function ($join) {
+
+            // ✅ FIX DUPLICATION
+            ->join(DB::raw("
+        (SELECT 
+            product_id, 
+            mst_id, 
+            MAX(discount) as discount, 
+            MAX(gst) as gst
+         FROM order_det
+         GROUP BY product_id, mst_id
+        ) as d
+    "), function ($join) {
                 $join->on('d.product_id', '=', 'b.product_id')
                     ->on('d.mst_id', '=', 'c.id');
             })
+
             ->join("customers as e", "c.customer_id", "e.id")
             ->join("company as f", "a.store_id", "f.id")
+
             ->where("a.is_invoice", 1)
+
             ->where(function ($query) use ($fromDate, $toDate) {
                 $query->whereBetween(DB::raw("DATE(a.invoice_convert_date)"), [$fromDate, $toDate])
                     ->orWhere(function ($q) use ($fromDate, $toDate) {
@@ -191,16 +239,36 @@ class saleReport extends Controller
                             ->whereBetween(DB::raw("DATE(a.invoice_date)"), [$fromDate, $toDate]);
                     });
             })
+
             ->where("a.store_id", $request->user->active_inventory);
+
+        // FILTERS
         if ($customer_id) {
             $data1->where("e.id", $customer_id);
         }
+
         if ($city1) {
             $data1->where("e.city1", $city1);
         }
 
-        $data = $data1->groupBy("a.id", "a.invoice_convert_date", "e.company", "a.invoice_id", "a.created_at", "e.gst", "e.state", "f.state")
-            ->get();
+        // GROUP
+        $data = $data1->groupBy(
+            "a.id",
+            "a.invoice_convert_date",
+            "e.company",
+            "a.invoice_id",
+            "a.created_at",
+            "e.gst",
+            "e.state",
+            "f.state"
+        )->get();
+
+
+
+
+        // echo "<pre>";
+        // print_r($data);
+        // die;
 
 
 
@@ -209,47 +277,79 @@ class saleReport extends Controller
             ->select(
                 DB::raw("MONTH(a.invoice_convert_date) as month_no"),
                 DB::raw("MONTHNAME(a.invoice_convert_date) as month_name"),
+
                 DB::raw("
-            ROUND(SUM(
-                (
+        ROUND(SUM(
+            CASE 
+                WHEN a.discount_type = 'price'
+                THEN
                     (
+                        -- taxable
                         (b.price * b.qty)
-                        - ((b.price * b.qty) / 100 * d.discount)
+                        - ((b.price * b.qty) * ((d.discount + b.discount) / 100))
                     )
-                    -
+                    +
                     (
+                        -- gst
                         (
                             (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
+                            - ((b.price * b.qty) * ((d.discount + b.discount) / 100))
+                        ) * d.gst / 100
                     )
-                )
-                +
-                (
+
+                ELSE
                     (
-                        (
-                            (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
+                        -- taxable
+                        (b.price * b.qty)
+                        - ((b.price * b.qty) * d.discount / 100)
+                        - (
+                            (
+                                (b.price * b.qty)
+                                - ((b.price * b.qty) * d.discount / 100)
+                            ) * b.discount / 100
                         )
-                        -
+                    )
+                    +
+                    (
+                        -- gst
                         (
                             (
                                 (b.price * b.qty)
-                                - ((b.price * b.qty) / 100 * d.discount)
-                            ) / 100 * b.discount
+                                - ((b.price * b.qty) * d.discount / 100)
+                                - (
+                                    (
+                                        (b.price * b.qty)
+                                        - ((b.price * b.qty) * d.discount / 100)
+                                    ) * b.discount / 100
+                                )
+                            ) * d.gst / 100
                         )
-                    ) / 100 * d.gst
-                )
-            ),2) AS grand_total
+                    )
+            END
+        ),2) AS grand_total
         ")
             )
+
             ->join('stock_outward_det as b', 'a.id', '=', 'b.mst_id')
             ->join('order_mst as c', 'a.order_id', '=', 'c.id')
-            ->join('order_det as d', function ($join) {
+
+            // ✅ FIX DUPLICATE ISSUE
+            ->join(DB::raw("
+        (SELECT 
+            product_id, 
+            mst_id, 
+            MAX(discount) as discount, 
+            MAX(gst) as gst
+         FROM order_det
+         GROUP BY product_id, mst_id
+        ) as d
+    "), function ($join) {
                 $join->on('d.product_id', '=', 'b.product_id')
                     ->on('d.mst_id', '=', 'c.id');
             })
+
             ->join("customers as e", "c.customer_id", "e.id")
+
             ->where("a.is_invoice", 1)
 
             ->where(function ($query) use ($fromDate, $toDate) {
@@ -259,17 +359,27 @@ class saleReport extends Controller
                             ->whereBetween(DB::raw("DATE(a.invoice_date)"), [$fromDate, $toDate]);
                     });
             })
+
             ->where("a.store_id", $request->user->active_inventory);
 
+        // FILTERS
         if ($customer_id) {
             $monthlyData1->where("c.customer_id", $customer_id);
         }
+
         if ($city1) {
             $monthlyData1->where("e.city1", $city1);
         }
-        $monthlyData = $monthlyData1->groupBy(DB::raw("MONTH(a.invoice_convert_date)"), DB::raw("MONTHNAME(a.invoice_convert_date)"))
+
+        // GROUP BY MONTH
+        $monthlyData = $monthlyData1
+            ->groupBy(
+                DB::raw("MONTH(a.invoice_convert_date)"),
+                DB::raw("MONTHNAME(a.invoice_convert_date)")
+            )
             ->orderBy(DB::raw("MONTH(a.invoice_convert_date)"))
             ->get();
+
         $months = [
             1 => 'Jan',
             2 => 'Feb',
@@ -307,106 +417,153 @@ class saleReport extends Controller
 
         $customers =  customers::get();
 
-        $data1 = DB::table('stock_outward_mst as a')
-            ->select(
-                "a.customer_id",
+   $data1 = DB::table('stock_outward_mst as a')
+    ->select(
+        "a.customer_id",
+        "e.company as customer",
+        "e.gst as gst_no",
+        DB::raw("'Sale Report' as particular"),
+        DB::raw("'Sales' as voucher_type"),
 
-                "e.company as customer",
+        // ✅ TOTAL
+        DB::raw("ROUND(SUM(b.price * b.qty), 2) as total"),
 
+        // ✅ DISCOUNT
+        DB::raw("
+        ROUND(SUM(
+            CASE 
+                WHEN a.discount_type = 'price'
+                    THEN (b.price * b.qty) * ((d.discount + b.discount) / 100)
+                ELSE (b.price * b.qty) * d.discount / 100
+            END
+        ), 2) as discount
+        "),
 
-                "e.gst as gst_no",
-                DB::raw("'Sale Report' as particular"),
-                DB::raw("'Sales' as voucher_type"),
-                DB::raw("
-                round(sum(
-                ((b.price*b.qty))
-                ),2) as total
-                "),
-                DB::raw("
-               round( sum(
-                ((b.price*b.qty/100)*d.discount)
-                ),2) as discount
-                "),
-                DB::raw("
-                round(SUM(
-                     
-                    (
-                        (
-                            (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
-                    )
-                ),2) AS discount2
-            "),
-                DB::raw("
-                round(SUM(
+        // ✅ DISCOUNT 2
+        DB::raw("
+        ROUND(SUM(
+            CASE 
+                WHEN a.discount_type = 'price'
+                    THEN 0
+                ELSE (
                     (
                         (b.price * b.qty)
-                        - ((b.price * b.qty) / 100 * d.discount)
-                    )
-                    -
+                        - ((b.price * b.qty) * d.discount / 100)
+                    ) * b.discount / 100
+                )
+            END
+        ), 2) as discount2
+        "),
+
+        // ✅ TAXABLE
+        DB::raw("
+        ROUND(SUM(
+            ROUND(
+                CASE 
+                    WHEN a.discount_type = 'price'
+                        THEN
+                            (b.price * b.qty)
+                            - ((b.price * b.qty) * ((d.discount + b.discount) / 100))
+                    ELSE
+                        (
+                            (b.price * b.qty)
+                            - ((b.price * b.qty) * d.discount / 100)
+                            - (
+                                (
+                                    (b.price * b.qty)
+                                    - ((b.price * b.qty) * d.discount / 100)
+                                ) * b.discount / 100
+                            )
+                        )
+                END
+            ,2)
+        ), 2) as taxable_amount
+        "),
+
+        // ✅ GST TYPE
+        DB::raw("
+        CASE
+            WHEN e.state = f.state THEN 'CGST'
+            ELSE 'IGST'
+        END AS gst_type
+        "),
+
+        // ✅ GST (NO INNER ROUND)
+        DB::raw("
+        ROUND(SUM(
+            CASE 
+                WHEN a.discount_type = 'price'
+                    THEN
+                        (
+                            (b.price * b.qty)
+                            - ((b.price * b.qty) * ((d.discount + b.discount) / 100))
+                        ) * d.gst / 100
+                ELSE
                     (
                         (
                             (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
+                            - ((b.price * b.qty) * d.discount / 100)
+                            - (
+                                (
+                                    (b.price * b.qty)
+                                    - ((b.price * b.qty) * d.discount / 100)
+                                ) * b.discount / 100
+                            )
+                        ) * d.gst / 100
                     )
-                ),2) AS taxable_amount
-            "),
-                DB::raw("
-                CASE
-                    WHEN e.state = f.state THEN 'CGST'
-                    ELSE 'IGST'
-                END AS gst_type
-            "),
-                DB::raw("
-            round( SUM(
-                    (((
-                        (b.price * b.qty)
-                        - ((b.price * b.qty) / 100 * d.discount)
-                    )
-                    -
-                    (
-                        (
-                            (b.price * b.qty)
-                            - ((b.price * b.qty) / 100 * d.discount)
-                        ) / 100 * b.discount
-                    )))/100*d.gst
-                        
-                ) ,2)AS gst
-            "),
+            END
+        ), 2) as gst
+        ")
+    )
 
+    ->join('stock_outward_det as b', 'a.id', '=', 'b.mst_id')
+    ->join('order_mst as c', 'a.order_id', '=', 'c.id')
 
+    // ✅ FIX DUPLICATE ISSUE
+    ->join(DB::raw("
+        (SELECT 
+            product_id, 
+            mst_id, 
+            MAX(discount) as discount, 
+            MAX(gst) as gst
+         FROM order_det
+         GROUP BY product_id, mst_id
+        ) as d
+    "), function ($join) {
+        $join->on('d.product_id', '=', 'b.product_id')
+             ->on('d.mst_id', '=', 'c.id');
+    })
 
-            )
-            ->join('stock_outward_det as b', 'a.id', '=', 'b.mst_id')
-            ->join('order_mst as c', 'a.order_id', '=', 'c.id')
-            ->join('order_det as d', function ($join) {
-                $join->on('d.product_id', '=', 'b.product_id')
-                    ->on('d.mst_id', '=', 'c.id');
-            })
-            ->join("customers as e", "c.customer_id", "e.id")
-            ->join("company as f", "a.store_id", "f.id")
-            ->where("a.is_invoice", 1)
-            ->where("a.store_id", $request->user->active_inventory)
-            ->whereDate("a.invoice_convert_date", ">=", $fromDate)
-            ->whereDate("a.invoice_convert_date", "<=", $toDate);
-        if ($customer_id) {
-            $data1->where("e.id", $customer_id);
-        }
+    ->join("customers as e", "c.customer_id", "e.id")
+    ->join("company as f", "a.store_id", "f.id")
 
-        $data = $data1->groupBy("e.company",   "e.gst", "e.state", "f.state", "a.customer_id")
-            ->get();
+    ->where("a.is_invoice", 1)
+    ->where("a.store_id", $request->user->active_inventory)
+    ->whereDate("a.invoice_convert_date", ">=", $fromDate)
+    ->whereDate("a.invoice_convert_date", "<=", $toDate);
 
-        $customers = customers::get();
-        $pieData = [];
+// FILTER
+if ($customer_id) {
+    $data1->where("e.id", $customer_id);
+}
 
-        foreach ($data as $row) {
-            $pieData[] = [
-                'customer' => $row->customer,
-                'total' => round(($row->taxable_amount + $row->gst), 2)
-            ];
-        }
+// GROUP
+$data = $data1->groupBy(
+    "e.company",
+    "e.gst",
+    "e.state",
+    "f.state",
+    "a.customer_id"
+)->get();
+$pieData = [];
+
+foreach ($data as $row) {
+    $pieData[] = [
+        'customer' => $row->customer,
+        'total' => round(($row->taxable_amount + $row->gst), 2)
+    ];
+}
+
 
         return view("customer-wise-sale-report", compact("customers", "data", "pieData"));
     }
@@ -469,84 +626,153 @@ class saleReport extends Controller
         $search = request("search");
 
         $customers =  customers::get();
-        $dt = DB::table("stock_outward_det as a")
-            ->select(
-                "b.invoice_date as pt_date",
-                "b.invoice_convert_date as invoice_date",
-                "d.created_at as order_date",
-                "c.name",
-                "c.part_no",
-                "x.company as company",
-                "b.invoice_id",
-                "u.name as user",
-                "x.city1",
-                "x.city",
-                DB::raw("ROUND(SUM(a.price),2) as price"),
-                DB::raw("ROUND(SUM(a.price * a.qty),2) as amount"),
-                DB::raw("SUM(a.qty) as qty"),
-                DB::raw("ROUND(SUM(((a.price * a.qty / 100) * f.first_discount)),2) as first_discount"),
-                DB::raw("ROUND(SUM(((a.qty * a.price) - ((a.price * a.qty / 100) * f.first_discount)) / 100 * a.discount),2) as discount"),
-                DB::raw("ROUND(SUM((((a.qty * a.price) 
-            - ((a.price * a.qty / 100) * f.first_discount)
-            - (((a.qty * a.price) - ((a.price * a.qty / 100) * f.first_discount)) / 100 * a.discount)
-        ) / 100 * f.gst)),2) as gst")
-            )
+$dt = DB::table("stock_outward_det as a")
+    ->select(
+        "b.invoice_date as pt_date",
+        "b.invoice_convert_date as invoice_date",
+        "d.created_at as order_date",
+        "c.name",
+        "c.part_no",
+        "x.company as company",
+        "b.invoice_id",
+        "u.name as user",
+        "x.city1",
+        "x.city",
 
-            ->join("stock_outward_mst as b", "a.mst_id", "b.id")
-            ->join("products as c", "a.product_id", "c.id")
-            ->join("order_mst as d", "b.order_id", "d.id")
+        // ✅ PRICE
+        DB::raw("ROUND(SUM(a.price),2) as price"),
 
-            // ✅ FIXED JOIN (Aggregated order_det)
-            ->joinSub(
-                DB::table("order_det")
-                    ->select(
-                        "product_id",
-                        "mst_id",
-                        DB::raw("MAX(discount) as discount"),
-                        DB::raw("MAX(discount) as first_discount"),
-                        DB::raw("MAX(gst) as gst")
+        // ✅ AMOUNT
+        DB::raw("ROUND(SUM(a.price * a.qty),2) as amount"),
+
+        // ✅ QTY
+        DB::raw("SUM(a.qty) as qty"),
+
+        // ✅ FIRST DISCOUNT
+        DB::raw("
+        ROUND(SUM(
+            CASE 
+                WHEN b.discount_type = 'price'
+                    THEN (a.price * a.qty) * ((f.first_discount + a.discount) / 100)
+                ELSE (a.price * a.qty) * f.first_discount / 100
+            END
+        ),2) as first_discount
+        "),
+
+        // ✅ SECOND DISCOUNT
+        DB::raw("
+        ROUND(SUM(
+            CASE 
+                WHEN b.discount_type = 'price'
+                    THEN 0
+                ELSE (
+                    (
+                        (a.price * a.qty)
+                        - ((a.price * a.qty) * f.first_discount / 100)
+                    ) * a.discount / 100
+                )
+            END
+        ),2) as discount
+        "),
+
+        // ✅ GST
+        DB::raw("
+        ROUND(SUM(
+            CASE 
+                WHEN b.discount_type = 'price'
+                THEN
+                    (
+                        (a.price * a.qty)
+                        - ((a.price * a.qty) * ((f.first_discount + a.discount) / 100))
+                    ) * f.gst / 100
+
+                ELSE
+                    (
+                        (
+                            (a.price * a.qty)
+                            - ((a.price * a.qty) * f.first_discount / 100)
+                            - (
+                                (
+                                    (a.price * a.qty)
+                                    - ((a.price * a.qty) * f.first_discount / 100)
+                                ) * a.discount / 100
+                            )
+                        ) * f.gst / 100
                     )
-                    ->groupBy("product_id", "mst_id"),
-                "f",
-                function ($join) {
-                    $join->on("f.product_id", "=", "a.product_id")
-                        ->on("f.mst_id", "=", "d.id");
-                }
+            END
+        ),2) as gst
+        ")
+    )
+
+    ->join("stock_outward_mst as b", "a.mst_id", "b.id")
+    ->join("products as c", "a.product_id", "c.id")
+    ->join("order_mst as d", "b.order_id", "d.id")
+
+    // ✅ FIXED JOIN (NO DUPLICATE)
+    ->joinSub(
+        DB::table("order_det")
+            ->select(
+                "product_id",
+                "mst_id",
+                DB::raw("MAX(discount) as first_discount"),
+                DB::raw("MAX(gst) as gst")
             )
-
-            ->join("customers as x", "b.customer_id", "x.id")
-            ->join("company as y", "b.store_id", "y.id")
-            ->leftJoin("users as u", "x.dsr", "u.user_name")
-
-            ->where("b.is_invoice", 1)
-            ->where(function ($query) use ($fromDate, $toDate) {
-                $query->whereBetween(DB::raw("DATE(b.invoice_convert_date)"), [$fromDate, $toDate])
-                    ->orWhere(function ($q) use ($fromDate, $toDate) {
-                        $q->whereNull("b.invoice_convert_date")
-                            ->whereBetween(DB::raw("DATE(b.invoice_date)"), [$fromDate, $toDate]);
-                    });
-            })
-
-            ->where("b.store_id", $request->user->active_inventory);
-
-        if ($customer_id) {
-            $dt->where("x.id", $customer_id);
+            ->groupBy("product_id", "mst_id"),
+        "f",
+        function ($join) {
+            $join->on("f.product_id", "=", "a.product_id")
+                 ->on("f.mst_id", "=", "d.id");
         }
-        if ($user_id) {
-            $dt->where("b.user_id", $user_id);
-        }
-        if ($search) {
-            $dt->where(function ($q) use ($search) {
-                $q->where('c.part_no', 'LIKE', "%{$search}%")
-                    ->orWhere('c.name', 'LIKE', "%{$search}%")
-                    ->orWhere('c.hsn_code', 'LIKE', "%{$search}%");
+    )
+
+    ->join("customers as x", "b.customer_id", "x.id")
+    ->join("company as y", "b.store_id", "y.id")
+    ->leftJoin("users as u", "x.dsr", "u.user_name")
+
+    ->where("b.is_invoice", 1)
+
+    ->where(function ($query) use ($fromDate, $toDate) {
+        $query->whereBetween(DB::raw("DATE(b.invoice_convert_date)"), [$fromDate, $toDate])
+            ->orWhere(function ($q) use ($fromDate, $toDate) {
+                $q->whereNull("b.invoice_convert_date")
+                  ->whereBetween(DB::raw("DATE(b.invoice_date)"), [$fromDate, $toDate]);
             });
-        }
+    })
 
+    ->where("b.store_id", $request->user->active_inventory);
 
+// FILTERS
+if ($customer_id) {
+    $dt->where("x.id", $customer_id);
+}
 
-        $data = $dt->groupBy("a.product_id", "c.name", "c.part_no", "x.company", "b.invoice_id", "u.name", "b.invoice_date", "b.invoice_convert_date", "d.created_at", "x.city", "x.city1")
-            ->get();
+if ($user_id) {
+    $dt->where("b.user_id", $user_id);
+}
+
+if ($search) {
+    $dt->where(function ($q) use ($search) {
+        $q->where('c.part_no', 'LIKE', "%{$search}%")
+          ->orWhere('c.name', 'LIKE', "%{$search}%")
+          ->orWhere('c.hsn_code', 'LIKE', "%{$search}%");
+    });
+}
+
+// GROUP
+$data = $dt->groupBy(
+    "a.product_id",
+    "c.name",
+    "c.part_no",
+    "x.company",
+    "b.invoice_id",
+    "u.name",
+    "b.invoice_date",
+    "b.invoice_convert_date",
+    "d.created_at",
+    "x.city",
+    "x.city1"
+)->get();
+
         // echo "<pre>";
         // print_r($data);
         // die;
