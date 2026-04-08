@@ -190,7 +190,6 @@ Route::post('/update-stock-inward',[InwardStock::class,'updateStockInward'])->na
   Route::get('outward-challan-view/{id}', [OutwardStock::class, 'OutwardChallanView'])->name('outward-challan-view');
   Route::post('convertToInvoice', [OutwardStock::class, 'convertToInvoice'])->name('convertToInvoice');
   Route::get('invoices', [OutwardStock::class, 'invoices'])->name('invoices');
-  Route::get('download-invoice/{id}', [OutwardStock::class, 'downloadInvoice'])->name('downloadInvoice');
 
 
 
@@ -389,3 +388,4 @@ Route::group(['middleware' => ['leadAppAuth']], function () {
   Route::get('/lead-app/logout', [leadAppController::class, 'logout'])->name('lead-app/logout');
   Route::post('leadApp/updateActiveInventory', [Admin::class, 'updateActiveInventory'])->name('leadApp/updateActiveInventory');
 });
+  Route::get('download-invoice/{id}', [OutwardStock::class, 'downloadInvoice'])->name('downloadInvoice');
