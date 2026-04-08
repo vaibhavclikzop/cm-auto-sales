@@ -1259,10 +1259,10 @@ class saleReport extends Controller
             ->select(
                 "x.company",
                 "d.order_id",
-                "d.status", // ✅ yaha add
+                "d.status", 
                 DB::raw("DATE(d.created_at) as order_date"),
 
-                /* ✅ Order Total */
+                /* Order Total */
                 "ot.totalOrderValue as orderValue",
 
                 /* PT Details */

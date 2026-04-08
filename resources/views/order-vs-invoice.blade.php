@@ -20,12 +20,7 @@
                         <input type="date" name="toDate" class="form-control" value="{{ request('toDate') }}"
                             onchange="this.form.submit()">
                     </div>
-
-
                 </form>
-
-
-
             </div>
         </div>
         <div class="card-body">
@@ -44,8 +39,6 @@
                         <th>Invoice ID</th>
                         <th>Invoice Value</th>
                         <th>Status</th>
-
-
                     </tr>
                 </thead>
                 <tbody>
@@ -59,8 +52,6 @@
                             <td>{{ $item->order_id }}</td>
                             <td>{{ $item->order_date }}</td>
                             <td>{{ $item->orderValue }}</td>
-
-
                             <td>{{ $item->invoice_date }}</td>
                             <td>{{ $item->outward_id }}</td>
                             <td>{{ $item->invoice_amount }}</td>
@@ -80,13 +71,8 @@
 
                         </tr>
                     @endforeach
-
-
-
                 </tbody>
-
             </table>
         </div>
-
     </div>
 @endsection
