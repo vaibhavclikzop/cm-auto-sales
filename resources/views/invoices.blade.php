@@ -199,8 +199,9 @@
             },
 
             success: function(result) {
+                 let msg = result.message || result || "Email sent successfully ";
                 $("#alert").html(`
-                <div class="alert alert-success"><strong>Success:</strong> ${result}</div>
+                <div class="alert alert-success"><strong>Success:</strong> ${msg}</div>
                      `);
             },
 

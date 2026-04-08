@@ -51,12 +51,6 @@ class Admin extends Controller
             ->join("customers as c", "a.customer_id", "c.id")
             ->orderby("id", "desc")->limit(4)->get();
 
-
-
-
-
-
-
         $months = [
             'January',
             'February',
