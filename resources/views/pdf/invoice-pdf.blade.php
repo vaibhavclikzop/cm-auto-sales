@@ -342,7 +342,7 @@
 
                 </tr>
                 <tr>
-                    <td @if (request('type') == 'without') colspan="9" @else colspan="12" @endif
+                    <td colspan="{{ $type != 'without' ? 12 : 10 }}"
                         style=" text-align: right">
                         Round OFF
                     </td>
