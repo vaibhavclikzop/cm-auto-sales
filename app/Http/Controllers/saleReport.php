@@ -417,19 +417,19 @@ class saleReport extends Controller
 
         $customers =  customers::get();
 
-   $data1 = DB::table('stock_outward_mst as a')
-    ->select(
-        "a.customer_id",
-        "e.company as customer",
-        "e.gst as gst_no",
-        DB::raw("'Sale Report' as particular"),
-        DB::raw("'Sales' as voucher_type"),
+        $data1 = DB::table('stock_outward_mst as a')
+            ->select(
+                "a.customer_id",
+                "e.company as customer",
+                "e.gst as gst_no",
+                DB::raw("'Sale Report' as particular"),
+                DB::raw("'Sales' as voucher_type"),
 
-        // ✅ TOTAL
-        DB::raw("ROUND(SUM(b.price * b.qty), 2) as total"),
+                // ✅ TOTAL
+                DB::raw("ROUND(SUM(b.price * b.qty), 2) as total"),
 
-        // ✅ DISCOUNT
-        DB::raw("
+                // ✅ DISCOUNT
+                DB::raw("
         ROUND(SUM(
             CASE 
                 WHEN a.discount_type = 'price'
@@ -439,8 +439,8 @@ class saleReport extends Controller
         ), 2) as discount
         "),
 
-        // ✅ DISCOUNT 2
-        DB::raw("
+                // ✅ DISCOUNT 2
+                DB::raw("
         ROUND(SUM(
             CASE 
                 WHEN a.discount_type = 'price'
@@ -455,8 +455,8 @@ class saleReport extends Controller
         ), 2) as discount2
         "),
 
-        // ✅ TAXABLE
-        DB::raw("
+                // ✅ TAXABLE
+                DB::raw("
         ROUND(SUM(
             ROUND(
                 CASE 
@@ -480,16 +480,16 @@ class saleReport extends Controller
         ), 2) as taxable_amount
         "),
 
-        // ✅ GST TYPE
-        DB::raw("
+                // ✅ GST TYPE
+                DB::raw("
         CASE
             WHEN e.state = f.state THEN 'CGST'
             ELSE 'IGST'
         END AS gst_type
         "),
 
-        // ✅ GST (NO INNER ROUND)
-        DB::raw("
+                // ✅ GST (NO INNER ROUND)
+                DB::raw("
         ROUND(SUM(
             CASE 
                 WHEN a.discount_type = 'price'
@@ -514,13 +514,13 @@ class saleReport extends Controller
             END
         ), 2) as gst
         ")
-    )
+            )
 
-    ->join('stock_outward_det as b', 'a.id', '=', 'b.mst_id')
-    ->join('order_mst as c', 'a.order_id', '=', 'c.id')
+            ->join('stock_outward_det as b', 'a.id', '=', 'b.mst_id')
+            ->join('order_mst as c', 'a.order_id', '=', 'c.id')
 
-    // ✅ FIX DUPLICATE ISSUE
-    ->join(DB::raw("
+            // ✅ FIX DUPLICATE ISSUE
+            ->join(DB::raw("
         (SELECT 
             product_id, 
             mst_id, 
@@ -530,39 +530,39 @@ class saleReport extends Controller
          GROUP BY product_id, mst_id
         ) as d
     "), function ($join) {
-        $join->on('d.product_id', '=', 'b.product_id')
-             ->on('d.mst_id', '=', 'c.id');
-    })
+                $join->on('d.product_id', '=', 'b.product_id')
+                    ->on('d.mst_id', '=', 'c.id');
+            })
 
-    ->join("customers as e", "c.customer_id", "e.id")
-    ->join("company as f", "a.store_id", "f.id")
+            ->join("customers as e", "c.customer_id", "e.id")
+            ->join("company as f", "a.store_id", "f.id")
 
-    ->where("a.is_invoice", 1)
-    ->where("a.store_id", $request->user->active_inventory)
-    ->whereDate("a.invoice_convert_date", ">=", $fromDate)
-    ->whereDate("a.invoice_convert_date", "<=", $toDate);
+            ->where("a.is_invoice", 1)
+            ->where("a.store_id", $request->user->active_inventory)
+            ->whereDate("a.invoice_convert_date", ">=", $fromDate)
+            ->whereDate("a.invoice_convert_date", "<=", $toDate);
 
-// FILTER
-if ($customer_id) {
-    $data1->where("e.id", $customer_id);
-}
+        // FILTER
+        if ($customer_id) {
+            $data1->where("e.id", $customer_id);
+        }
 
-// GROUP
-$data = $data1->groupBy(
-    "e.company",
-    "e.gst",
-    "e.state",
-    "f.state",
-    "a.customer_id"
-)->get();
-$pieData = [];
+        // GROUP
+        $data = $data1->groupBy(
+            "e.company",
+            "e.gst",
+            "e.state",
+            "f.state",
+            "a.customer_id"
+        )->get();
+        $pieData = [];
 
-foreach ($data as $row) {
-    $pieData[] = [
-        'customer' => $row->customer,
-        'total' => round(($row->taxable_amount + $row->gst), 2)
-    ];
-}
+        foreach ($data as $row) {
+            $pieData[] = [
+                'customer' => $row->customer,
+                'total' => round(($row->taxable_amount + $row->gst), 2)
+            ];
+        }
 
 
         return view("customer-wise-sale-report", compact("customers", "data", "pieData"));
@@ -626,30 +626,30 @@ foreach ($data as $row) {
         $search = request("search");
 
         $customers =  customers::get();
-$dt = DB::table("stock_outward_det as a")
-    ->select(
-        "b.invoice_date as pt_date",
-        "b.invoice_convert_date as invoice_date",
-        "d.created_at as order_date",
-        "c.name",
-        "c.part_no",
-        "x.company as company",
-        "b.invoice_id",
-        "u.name as user",
-        "x.city1",
-        "x.city",
+        $dt = DB::table("stock_outward_det as a")
+            ->select(
+                "b.invoice_date as pt_date",
+                "b.invoice_convert_date as invoice_date",
+                "d.created_at as order_date",
+                "c.name",
+                "c.part_no",
+                "x.company as company",
+                "b.invoice_id",
+                "u.name as user",
+                "x.city1",
+                "x.city",
 
-        // ✅ PRICE
-        DB::raw("ROUND(SUM(a.price),2) as price"),
+                // ✅ PRICE
+                DB::raw("ROUND(SUM(a.price),2) as price"),
 
-        // ✅ AMOUNT
-        DB::raw("ROUND(SUM(a.price * a.qty),2) as amount"),
+                // ✅ AMOUNT
+                DB::raw("ROUND(SUM(a.price * a.qty),2) as amount"),
 
-        // ✅ QTY
-        DB::raw("SUM(a.qty) as qty"),
+                // ✅ QTY
+                DB::raw("SUM(a.qty) as qty"),
 
-        // ✅ FIRST DISCOUNT
-        DB::raw("
+                // ✅ FIRST DISCOUNT
+                DB::raw("
         ROUND(SUM(
             CASE 
                 WHEN b.discount_type = 'price'
@@ -659,8 +659,8 @@ $dt = DB::table("stock_outward_det as a")
         ),2) as first_discount
         "),
 
-        // ✅ SECOND DISCOUNT
-        DB::raw("
+                // ✅ SECOND DISCOUNT
+                DB::raw("
         ROUND(SUM(
             CASE 
                 WHEN b.discount_type = 'price'
@@ -675,8 +675,8 @@ $dt = DB::table("stock_outward_det as a")
         ),2) as discount
         "),
 
-        // ✅ GST
-        DB::raw("
+                // ✅ GST
+                DB::raw("
         ROUND(SUM(
             CASE 
                 WHEN b.discount_type = 'price'
@@ -702,76 +702,76 @@ $dt = DB::table("stock_outward_det as a")
             END
         ),2) as gst
         ")
-    )
-
-    ->join("stock_outward_mst as b", "a.mst_id", "b.id")
-    ->join("products as c", "a.product_id", "c.id")
-    ->join("order_mst as d", "b.order_id", "d.id")
-
-    // ✅ FIXED JOIN (NO DUPLICATE)
-    ->joinSub(
-        DB::table("order_det")
-            ->select(
-                "product_id",
-                "mst_id",
-                DB::raw("MAX(discount) as first_discount"),
-                DB::raw("MAX(gst) as gst")
             )
-            ->groupBy("product_id", "mst_id"),
-        "f",
-        function ($join) {
-            $join->on("f.product_id", "=", "a.product_id")
-                 ->on("f.mst_id", "=", "d.id");
+
+            ->join("stock_outward_mst as b", "a.mst_id", "b.id")
+            ->join("products as c", "a.product_id", "c.id")
+            ->join("order_mst as d", "b.order_id", "d.id")
+
+            // ✅ FIXED JOIN (NO DUPLICATE)
+            ->joinSub(
+                DB::table("order_det")
+                    ->select(
+                        "product_id",
+                        "mst_id",
+                        DB::raw("MAX(discount) as first_discount"),
+                        DB::raw("MAX(gst) as gst")
+                    )
+                    ->groupBy("product_id", "mst_id"),
+                "f",
+                function ($join) {
+                    $join->on("f.product_id", "=", "a.product_id")
+                        ->on("f.mst_id", "=", "d.id");
+                }
+            )
+
+            ->join("customers as x", "b.customer_id", "x.id")
+            ->join("company as y", "b.store_id", "y.id")
+            ->leftJoin("users as u", "x.dsr", "u.user_name")
+
+            ->where("b.is_invoice", 1)
+
+            ->where(function ($query) use ($fromDate, $toDate) {
+                $query->whereBetween(DB::raw("DATE(b.invoice_convert_date)"), [$fromDate, $toDate])
+                    ->orWhere(function ($q) use ($fromDate, $toDate) {
+                        $q->whereNull("b.invoice_convert_date")
+                            ->whereBetween(DB::raw("DATE(b.invoice_date)"), [$fromDate, $toDate]);
+                    });
+            })
+
+            ->where("b.store_id", $request->user->active_inventory);
+
+        // FILTERS
+        if ($customer_id) {
+            $dt->where("x.id", $customer_id);
         }
-    )
 
-    ->join("customers as x", "b.customer_id", "x.id")
-    ->join("company as y", "b.store_id", "y.id")
-    ->leftJoin("users as u", "x.dsr", "u.user_name")
+        if ($user_id) {
+            $dt->where("b.user_id", $user_id);
+        }
 
-    ->where("b.is_invoice", 1)
-
-    ->where(function ($query) use ($fromDate, $toDate) {
-        $query->whereBetween(DB::raw("DATE(b.invoice_convert_date)"), [$fromDate, $toDate])
-            ->orWhere(function ($q) use ($fromDate, $toDate) {
-                $q->whereNull("b.invoice_convert_date")
-                  ->whereBetween(DB::raw("DATE(b.invoice_date)"), [$fromDate, $toDate]);
+        if ($search) {
+            $dt->where(function ($q) use ($search) {
+                $q->where('c.part_no', 'LIKE', "%{$search}%")
+                    ->orWhere('c.name', 'LIKE', "%{$search}%")
+                    ->orWhere('c.hsn_code', 'LIKE', "%{$search}%");
             });
-    })
+        }
 
-    ->where("b.store_id", $request->user->active_inventory);
-
-// FILTERS
-if ($customer_id) {
-    $dt->where("x.id", $customer_id);
-}
-
-if ($user_id) {
-    $dt->where("b.user_id", $user_id);
-}
-
-if ($search) {
-    $dt->where(function ($q) use ($search) {
-        $q->where('c.part_no', 'LIKE', "%{$search}%")
-          ->orWhere('c.name', 'LIKE', "%{$search}%")
-          ->orWhere('c.hsn_code', 'LIKE', "%{$search}%");
-    });
-}
-
-// GROUP
-$data = $dt->groupBy(
-    "a.product_id",
-    "c.name",
-    "c.part_no",
-    "x.company",
-    "b.invoice_id",
-    "u.name",
-    "b.invoice_date",
-    "b.invoice_convert_date",
-    "d.created_at",
-    "x.city",
-    "x.city1"
-)->get();
+        // GROUP
+        $data = $dt->groupBy(
+            "a.product_id",
+            "c.name",
+            "c.part_no",
+            "x.company",
+            "b.invoice_id",
+            "u.name",
+            "b.invoice_date",
+            "b.invoice_convert_date",
+            "d.created_at",
+            "x.city",
+            "x.city1"
+        )->get();
 
         // echo "<pre>";
         // print_r($data);
@@ -1229,13 +1229,7 @@ $data = $dt->groupBy(
         $user_id = request("user_id");
         $search = request("search");
 
-        /* -----------------------------------------
-   1️⃣  ORDER TOTAL SUBQUERY (One row per order)
-------------------------------------------*/
 
-        /* -----------------------------------------
-   1️⃣ ORDER TOTAL SUBQUERY
-------------------------------------------*/
 
         $orderTotal = DB::table("order_det as od")
             ->select(
@@ -1257,14 +1251,15 @@ $data = $dt->groupBy(
 
 
         /* -----------------------------------------
-   2️⃣ MAIN QUERY (BASE = ORDER)
-------------------------------------------*/
+            2️⃣ MAIN QUERY (BASE = ORDER)
+            ------------------------------------------*/
 
         $dt = DB::table("order_mst as d")
 
             ->select(
                 "x.company",
                 "d.order_id",
+                "d.status", // ✅ yaha add
                 DB::raw("DATE(d.created_at) as order_date"),
 
                 /* ✅ Order Total */
@@ -1280,6 +1275,7 @@ $data = $dt->groupBy(
                 "b.invoice_convert_date",
                 "b.invoice_id",
                 "b.is_invoice",
+
 
                 DB::raw("
             ROUND(
@@ -1343,10 +1339,6 @@ $data = $dt->groupBy(
         }
 
 
-        /* -----------------------------------------
-   3️⃣ GROUPING
-------------------------------------------*/
-
         $data = $dt->groupBy(
             "x.company",
             "d.order_id",
@@ -1354,6 +1346,7 @@ $data = $dt->groupBy(
             "ot.totalOrderValue",
             "b.invoice_date",
             "b.outward_id",
+            "d.status",
             "b.invoice_convert_date",
             "b.invoice_id",
             "b.is_invoice"

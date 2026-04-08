@@ -43,6 +43,8 @@
                         <th>Invoice Date</th>
                         <th>Invoice ID</th>
                         <th>Invoice Value</th>
+                        <th>Status</th>
+
 
                     </tr>
                 </thead>
@@ -72,6 +74,10 @@
                                 <td></td>
                                 <td></td>
                             @endif
+                            <td>
+                                <span class="badge bg-info">{{ $item->status }}</span>
+                            </td>
+
                         </tr>
                     @endforeach
 
