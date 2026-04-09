@@ -1256,6 +1256,7 @@ class saleReport extends Controller
 
 
         $orderTotal = DB::table("order_det as od")
+            ->where("od.is_delete", 0)
             ->select(
                 "od.mst_id",
                 DB::raw("
@@ -1340,10 +1341,26 @@ class saleReport extends Controller
             ->leftJoin("stock_outward_det as a", "a.mst_id", "b.id")
 
             /* Order Det for discount/gst reference */
-            ->leftJoin("order_det as f", function ($join) {
-                $join->on('f.product_id', '=', 'a.product_id')
-                    ->on('f.mst_id', '=', 'd.id');
-            })
+            // ->leftJoin("order_det as f", function ($join) {
+            //     $join->on('f.product_id', '=', 'a.product_id')
+            //         ->on('f.mst_id', '=', 'd.id');
+            // })
+            ->leftJoinSub(
+                DB::table("order_det")
+                    ->select(
+                        "product_id",
+                        "mst_id",
+                        DB::raw("MAX(discount) as discount"),
+                        DB::raw("MAX(gst) as gst")
+                    )
+                    ->where("is_delete", 0)
+                    ->groupBy("product_id", "mst_id"),
+                "f",
+                function ($join) {
+                    $join->on("f.product_id", "=", "a.product_id")
+                        ->on("f.mst_id", "=", "d.id");
+                }
+            )
 
             ->leftJoin("customers as x", "d.customer_id", "x.id")
 
