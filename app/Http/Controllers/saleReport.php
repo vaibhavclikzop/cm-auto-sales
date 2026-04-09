@@ -220,9 +220,10 @@ class saleReport extends Controller
             MAX(discount) as discount, 
             MAX(gst) as gst
          FROM order_det
+         WHERE is_delete = 0  
          GROUP BY product_id, mst_id
         ) as d
-    "), function ($join) {
+     "), function ($join) {
                 $join->on('d.product_id', '=', 'b.product_id')
                     ->on('d.mst_id', '=', 'c.id');
             })
@@ -343,7 +344,7 @@ class saleReport extends Controller
          FROM order_det
          GROUP BY product_id, mst_id
         ) as d
-    "), function ($join) {
+         "), function ($join) {
                 $join->on('d.product_id', '=', 'b.product_id')
                     ->on('d.mst_id', '=', 'c.id');
             })
@@ -527,9 +528,10 @@ class saleReport extends Controller
             MAX(discount) as discount, 
             MAX(gst) as gst
          FROM order_det
+         WHERE is_delete = 0  
          GROUP BY product_id, mst_id
         ) as d
-    "), function ($join) {
+         "), function ($join) {
                 $join->on('d.product_id', '=', 'b.product_id')
                     ->on('d.mst_id', '=', 'c.id');
             })
@@ -588,7 +590,8 @@ class saleReport extends Controller
             ->join('order_mst as d', 'b.order_id', '=', 'd.id')
             ->join('order_det as f', function ($join) {
                 $join->on('f.product_id', '=', 'a.product_id')
-                    ->on('f.mst_id', '=', 'd.id');
+                    ->on('f.mst_id', '=', 'd.id')
+                    ->where('f.is_delete', 0);
             });
 
 
@@ -717,6 +720,7 @@ class saleReport extends Controller
                         DB::raw("MAX(discount) as first_discount"),
                         DB::raw("MAX(gst) as gst")
                     )
+                    ->where("is_delete", 0)
                     ->groupBy("product_id", "mst_id"),
                 "f",
                 function ($join) {
@@ -805,10 +809,26 @@ class saleReport extends Controller
             ->join("stock_outward_mst as b", "a.mst_id", "b.id")
             ->join("products as c", "a.product_id", "c.id")
             ->join('order_mst as d', 'b.order_id', '=', 'd.id')
-            ->join('order_det as f', function ($join) {
-                $join->on('f.product_id', '=', 'a.product_id')
-                    ->on('f.mst_id', '=', 'd.id');
-            })
+            // ->join('order_det as f', function ($join) {
+            //     $join->on('f.product_id', '=', 'a.product_id')
+            //         ->on('f.mst_id', '=', 'd.id');
+            // })
+            ->joinSub(
+                DB::table("order_det")
+                    ->select(
+                        "product_id",
+                        "mst_id",
+                        DB::raw("MAX(discount) as discount"),
+                        DB::raw("MAX(gst) as gst")
+                    )
+                    ->where("is_delete", 0)
+                    ->groupBy("product_id", "mst_id"),
+                "f",
+                function ($join) {
+                    $join->on("f.product_id", "=", "a.product_id")
+                        ->on("f.mst_id", "=", "d.id");
+                }
+            )
             ->join("customers as x", "b.customer_id", "x.id")
             ->join("company as y", "b.store_id", "y.id")
             ->join("users as u", "b.user_id", "u.id")
