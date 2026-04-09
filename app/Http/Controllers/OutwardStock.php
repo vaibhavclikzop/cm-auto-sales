@@ -435,7 +435,7 @@ class OutwardStock extends Controller
     {
 
         $data =  DB::table("stock_outward_mst as a")
-            ->select("a.*", "c.company as customer_name", "c.address", "c.state", "c.city", "c.pincode", "c.email", "c.number", "c.gst", "b.delivery_date", "d.name as user", "e.gst_no", "e.img", "e.name", "e.address as c_address", "e.email as c_email", "e.name as company_name", "e.state as c_state", "c.state as bill_state", "c.city as bill_city", "c.address as bill_address", "c.pincode as bill_pincode", "c.ship_address", "c.ship_state", "c.ship_city", "c.ship_pincode")
+            ->select("a.*", "c.company as customer_name", "c.address", "c.state", "c.city", "c.pincode", "c.email", "c.number", "c.gst", "b.delivery_date", "d.name as user", "e.gst_no", "e.img", "e.name", "e.address as c_address", "e.email as c_email", "e.name as company_name", "e.bank_name","e.branch_name", "e.account_number","e.ifsc_code", "e.state as c_state", "c.state as bill_state", "c.city as bill_city", "c.address as bill_address", "c.pincode as bill_pincode", "c.ship_address", "c.ship_state", "c.ship_city", "c.ship_pincode")
             ->join("order_mst as b", "a.order_id", "b.id")
             ->join("customers as c", "b.customer_id", "c.id")
             ->join("users as d", "a.user_id", "d.id")

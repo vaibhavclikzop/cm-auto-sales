@@ -142,6 +142,11 @@ class Masters extends Controller
                     "img" => $file,
                     "pt_prefix" => $request->pt_prefix,
                     "pt_no" => $request->pt_no,
+                    "bank_name"=>$request->bank_name,
+                    "branch_name"=>$request->branch_name,
+                    "account_number"=>$request->account_number,
+                    "ifsc_code"=>$request->ifsc_code,
+
 
                 ));
             } else {
@@ -158,6 +163,10 @@ class Masters extends Controller
                     "img" => $file,
                     "pt_prefix" => $request->pt_prefix,
                     "pt_no" => $request->pt_no,
+                     "bank_name"=>$request->bank_name,
+                    "branch_name"=>$request->branch_name,
+                    "account_number"=>$request->account_number,
+                    "ifsc_code"=>$request->ifsc_code,
 
                 ));
             }

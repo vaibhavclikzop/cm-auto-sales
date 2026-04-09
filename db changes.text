@@ -3,3 +3,22 @@ ALTER TABLE `customers` CHANGE `company_id` `company` TEXT NULL DEFAULT NULL;
 ALTER TABLE `products` ADD `gst` DECIMAL(10,2) NOT NULL DEFAULT '0' AFTER `raw_material`;
 
 ALTER TABLE `users` ADD `user_name` TEXT NOT NULL AFTER `role_id`;
+
+
+
+
+
+
+
+
+
+
+
+
+.....................................................................
+
+ALTER TABLE company
+ADD COLUMN bank_name VARCHAR(255) NULL AFTER pt_no,
+ADD COLUMN branch_name VARCHAR(255) NULL AFTER bank_name,
+ADD COLUMN account_number VARCHAR(50) NULL AFTER branch_name,
+ADD COLUMN ifsc_code VARCHAR(50) NULL AFTER account_number;

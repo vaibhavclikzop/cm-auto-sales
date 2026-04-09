@@ -157,13 +157,30 @@
                                 value="" required>
 
                         </div>
+                        <div class="col-md-6  mt-2">
+                            <label for="">Bank Name</label>
+                            <input type="text" name="bank_name" id="bank_name" class="form-control"
+                                value="" required>
 
+                        </div>
+                        <div class="col-md-6  mt-2">
+                            <label for="">Branch Name</label>
+                            <input type="text" name="branch_name" id="branch_name" class="form-control"
+                                value="" required>
 
+                        </div>
+                        <div class="col-md-6  mt-2">
+                            <label for="">Account Number</label>
+                            <input type="text" name="account_number" id="account_number" class="form-control"
+                                value="" required>
 
+                        </div>
+                        <div class="col-md-6  mt-2">
+                            <label for="">IFSC Code</label>
+                            <input type="text" name="ifsc_code" id="ifsc_code" class="form-control"
+                                value="" required>
 
-
-
-
+                        </div>
 
 
                     </div>

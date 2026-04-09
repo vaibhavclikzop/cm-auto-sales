@@ -460,7 +460,7 @@ class OrderManagement extends Controller
         $status = request("status");
 
         $data = DB::table("order_mst as a")
-            ->select("a.*", "b.name as customer_name", "b.number", "b.email", "b.gst", "b.address as bill_address", "b.state", "b.city as bill_city", "b.pincode as bill_pincode", "c.img", "c.name", "c.gst_no", "c.email as c_email", "c.number as c_number", "c.address as c_address", "b.company as company_name", "a.created_at", "c.state as c_state", "b.ship_address", "b.ship_state", "b.ship_city", "b.ship_pincode")
+            ->select("a.*", "b.name as customer_name", "b.number", "b.email", "b.gst", "b.address as bill_address", "b.state", "b.city as bill_city", "b.pincode as bill_pincode", "c.img", "c.name", "c.gst_no", "c.email as c_email", "c.number as c_number", "c.address as c_address", "b.company as company_name", "c.bank_name","c.branch_name", "c.account_number", "c.ifsc_code", "a.created_at", "c.state as c_state", "b.ship_address", "b.ship_state", "b.ship_city", "b.ship_pincode")
             ->join("customers as b", "a.customer_id", "b.id", "c.*")
             ->join("company as c", "a.company_id", "c.id")
             ->where("a.id", $id)

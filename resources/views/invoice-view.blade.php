@@ -470,17 +470,17 @@
                         </div>
                         <div>
 
-                            CENTRAL BANK OF INDIA
+                            {{ $data->bank_name }}
                         </div>
                         <div>
-                            BRANCH : SEC 15, CHANDIGARH
+                            BRANCH : {{ $data->branch_name }}
                         </div>
 
                         <div>
-                            Bank Account No. : 5277112599
+                            Bank Account No. : {{ $data->account_number}}
                         </div>
                         <div>
-                            IFSC : CBIN0280413
+                            IFSC : {{ $data->ifsc_code}}
                         </div>
                     </div>
                     <div style="color: #393185; text-align: center ; font-size: 10px">
