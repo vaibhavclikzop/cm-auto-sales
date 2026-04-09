@@ -382,19 +382,19 @@
 
                     <br>
 
-                    CENTRAL BANK OF INDIA
+                    {{ $data->bank_name }}
 
                     <br>
 
-                    BRANCH : SEC 15, CHANDIGARH
+                    BRANCH : {{ $data->branch_name}}
 
                     <br>
 
-                    Bank Account No : 5277112599
+                    Bank Account No : {{ $data->account_number }}
 
                     <br>
 
-                    IFSC : CBIN0280413
+                    IFSC : {{ $data->ifsc_code}}
 
                 </td>
 
