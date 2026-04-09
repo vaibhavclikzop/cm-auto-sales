@@ -896,10 +896,14 @@ class saleReport extends Controller
             ->leftJoinSub($stock, "s", function ($join) {
                 $join->on("a.product_id", "=", "s.product_id");
             })
+
+
+            ->where("a.is_delete", 0)
             ->whereDate("x.created_at", ">=", $fromDate)
             ->whereDate("x.created_at", "<=", $toDate)
             ->where("x.company_id", $request->user->active_inventory)
             ->where("y.party_code", "!=", 161)
+
             ->groupBy(
                 "a.product_id",
                 "b.name",
@@ -1259,7 +1263,7 @@ class saleReport extends Controller
             ->select(
                 "x.company",
                 "d.order_id",
-                "d.status", 
+                "d.status",
                 DB::raw("DATE(d.created_at) as order_date"),
 
                 /* Order Total */
