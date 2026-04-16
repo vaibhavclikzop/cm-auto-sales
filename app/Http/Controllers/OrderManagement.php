@@ -239,11 +239,97 @@ class OrderManagement extends Controller
     {
 
         $status = request("status");
+        $orderTotal = DB::table("order_det as od")
+            ->where("od.is_delete", 0)
+            ->select(
+                "od.mst_id",
+                DB::raw("
+                ROUND(SUM(
+                    ((od.qty * od.price)
+                    - ((od.qty * od.price) / 100 * od.discount))
+                    +
+                    (
+                        ((od.qty * od.price)
+                        - ((od.qty * od.price) / 100 * od.discount)
+                        ) / 100 * od.gst
+                    )
+                ),2) as totalOrderValue
+            ")
+            )
+            ->groupBy("od.mst_id");
+
+        $ptTotal = DB::table("stock_outward_mst as b")
+            ->leftJoin("stock_outward_det as a", "a.mst_id", "b.id")
+
+            ->leftJoinSub(
+                DB::table("order_det")
+                    ->select(
+                        "product_id",
+                        "mst_id",
+                        DB::raw("MAX(discount) as discount"),
+                        DB::raw("MAX(gst) as gst")
+                    )
+                    ->where("is_delete", 0)
+                    ->groupBy("product_id", "mst_id"),
+                "f",
+                function ($join) {
+                    $join->on("f.product_id", "=", "a.product_id")
+                        ->on("f.mst_id", "=", "b.order_id");
+                }
+            )
+
+            ->select(
+                "b.order_id",
+
+
+                DB::raw("
+            ROUND(
+                SUM(a.price * a.qty)
+                -
+                SUM(((a.price*a.qty/100)*f.discount))
+                -
+                SUM(
+                    ((a.qty*a.price)
+                    - (a.price*a.qty/100)*f.discount)
+                    /100 * a.discount
+                )
+                +
+                SUM(
+                    (
+                        ((a.qty*a.price)
+                        - (a.price*a.qty/100)*f.discount)
+                        -
+                        (
+                            ((a.qty*a.price)
+                            - (a.price*a.qty/100)*f.discount)
+                            /100 * a.discount
+                        )
+                    )
+                    /100 * f.gst
+                )
+            ,2) as pt_value
+        ")
+            )
+
+            ->groupBy("b.order_id");
 
         $order = DB::table("order_mst as a")
-            ->select("a.*", "b.name as customer", "c.name as user", "b.company")
+            ->select(
+                "a.*",
+                "b.name as customer",
+                "c.name as user",
+                "b.company",
+                "ot.totalOrderValue as order_value",
+                "pt.pt_value"
+            )
             ->join("customers as b", "a.customer_id", "b.id")
             ->join("users as c", "a.user_id", "c.id")
+            ->leftJoinSub($orderTotal, 'ot', function ($join) {
+                $join->on('ot.mst_id', '=', 'a.id');
+            })
+            ->leftJoinSub($ptTotal, 'pt', function ($join) {
+                $join->on('pt.order_id', '=', 'a.id');
+            })
             ->where("a.company_id", $request->user->active_inventory)
             ->whereIn("a.user_id", $request->userIds);
         if ($status) {
@@ -251,7 +337,20 @@ class OrderManagement extends Controller
         }
         $orders =  $order->orderBy("id", "desc")
             ->get();
-        return view("orders", compact("orders"));
+
+
+        $totalOrders      = $orders->count();
+        $totalOrderValue  = $orders->sum('order_value');
+        $totalStockValue = DB::table("current_stock as s")
+            ->leftJoin("products as p", "p.id", "s.product_id")
+            ->select(DB::raw("ROUND(SUM(s.stock * p.sale_price),2) as total"))
+            ->value("total");
+        return view("orders", compact(
+            "orders",
+            "totalOrders",
+            "totalOrderValue",
+            "totalStockValue"
+        ));
     }
     public function InitiateOrder(Request $request)
     {
@@ -460,7 +559,7 @@ class OrderManagement extends Controller
         $status = request("status");
 
         $data = DB::table("order_mst as a")
-            ->select("a.*", "b.name as customer_name", "b.number", "b.email", "b.gst", "b.address as bill_address", "b.state", "b.city as bill_city", "b.pincode as bill_pincode", "c.img", "c.name", "c.gst_no", "c.email as c_email", "c.number as c_number", "c.address as c_address", "b.company as company_name", "c.bank_name","c.branch_name", "c.account_number", "c.ifsc_code", "a.created_at", "c.state as c_state", "b.ship_address", "b.ship_state", "b.ship_city", "b.ship_pincode")
+            ->select("a.*", "b.name as customer_name", "b.number", "b.email", "b.gst", "b.address as bill_address", "b.state", "b.city as bill_city", "b.pincode as bill_pincode", "c.img", "c.name", "c.gst_no", "c.email as c_email", "c.number as c_number", "c.address as c_address", "b.company as company_name", "c.bank_name", "c.branch_name", "c.account_number", "c.ifsc_code", "a.created_at", "c.state as c_state", "b.ship_address", "b.ship_state", "b.ship_city", "b.ship_pincode")
             ->join("customers as b", "a.customer_id", "b.id", "c.*")
             ->join("company as c", "a.company_id", "c.id")
             ->where("a.id", $id)
@@ -606,9 +705,9 @@ class OrderManagement extends Controller
                 if ($record[0] == "brand") {
                     continue;
                 }
-            $part_no = $record[1];
-            $name    = $record[2]; 
-            $qty     = $record[3];
+                $part_no = $record[1];
+                $name    = $record[2];
+                $qty     = $record[3];
 
                 $products = DB::table("products as a")
                     ->select("a.*", "b.name as brand_name")
@@ -616,30 +715,29 @@ class OrderManagement extends Controller
                     ->where('a.part_no', $record[1])->first();
                 if ($products) {
                     // $products->qty = $record[3];
-                     $data[] = [
-                    'id' => $products->id,
-                    'name' => $products->name,
-                    'part_no' => $products->part_no,
-                    'qty' => $qty,
-                    'purchase_price' => $products->purchase_price,
-                    'gst' => $products->gst,
-                    'found' => true
-                ];
-                }
-                 else {
+                    $data[] = [
+                        'id' => $products->id,
+                        'name' => $products->name,
+                        'part_no' => $products->part_no,
+                        'qty' => $qty,
+                        'purchase_price' => $products->purchase_price,
+                        'gst' => $products->gst,
+                        'found' => true
+                    ];
+                } else {
 
-                // ✅ NOT FOUND CASE
-                $data[] = [
-                    'id' => null,
-                    'name' => $name, // CSV se
-                    'part_no' => $part_no,
-                    'qty' => $qty,
-                    'purchase_price' => null,
-                    'gst' => null,
-                    'found' => false
-                ];
-            }
-                
+                    // ✅ NOT FOUND CASE
+                    $data[] = [
+                        'id' => null,
+                        'name' => $name, // CSV se
+                        'part_no' => $part_no,
+                        'qty' => $qty,
+                        'purchase_price' => null,
+                        'gst' => null,
+                        'found' => false
+                    ];
+                }
+
                 // $productIds = array_column($data, 'id');
 
                 // $data[] = $products;

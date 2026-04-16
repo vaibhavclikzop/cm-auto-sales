@@ -47,6 +47,36 @@
 
             </div>
         </div>
+        <div class="row mb-3">
+
+    <div class="col-md-4">
+        <div class="card bg-dark text-">
+            <div class="card-body" style="color: #fff !important;">
+                <h5 style="color: #fff !important;">Total Orders</h5>
+                <h4 style="color: #fff !important;">{{ $totalOrders }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-primary" style="color:white !important;">
+            <div class="card-body" style="color: #fff !important;">
+                <h5 style="color: #fff !important;">Total Order Value</h5>
+                <h4 style="color: #fff !important;">₹ {{ number_format($totalOrderValue, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body" >
+                <h5 style="color: #fff !important;">In Stock Value</h5>
+                <h4 style="color: #fff !important;">₹ {{ number_format($totalStockValue, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+
+</div>
         <div class="card-body">
             <table class="table dataTable">
                 <thead>
@@ -54,10 +84,12 @@
                         <th>S.no</th>
                         <th> Order ID</th>
                         <th> Customer Name</th>
-
                         <th>Order Date</th>
                         <th>City</th>
-                        <th>Description</th>
+                        
+                        <th>Order Value</th>
+                        <th>PT Value</th>
+<th>Description</th>
                         <th>Status</th>
                         <th>User</th>
                         <th>Action</th>
@@ -76,6 +108,8 @@
 
                             <th>{{ date('d-m-y', strtotime($item->created_at)) }}</th>
                             <th>{{ $item->city }}</th>
+                            <th>{{ $item->order_value }}</th>
+                            <th>{{ $item->pt_value }}</th>
                             <th>{{ $item->description }}</th>
                             <th>{{ $item->status }}</th>
                             <th>{{ $item->user }}</th>
