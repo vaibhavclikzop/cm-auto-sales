@@ -341,15 +341,37 @@ class OrderManagement extends Controller
 
         $totalOrders      = $orders->count();
         $totalOrderValue  = $orders->sum('order_value');
-        $totalStockValue = DB::table("current_stock as s")
-            ->leftJoin("products as p", "p.id", "s.product_id")
-            ->select(DB::raw("ROUND(SUM(s.stock * p.sale_price),2) as total"))
+        $totalPtValue  = $orders->sum('pt_value');
+        $totalPendingOrderValue = $totalOrderValue - $totalPtValue;
+        $totalStockValue = DB::table("order_det as od")
+            ->leftJoinSub(
+                DB::table("stock_outward_mst as som")
+                    ->leftJoin("stock_outward_det as sod", "sod.mst_id", "som.id")
+                    ->select(
+                        "som.order_id",
+                        "sod.product_id",
+                        DB::raw("SUM(sod.qty) as dispatched_qty")
+                    )
+                    ->groupBy("som.order_id", "sod.product_id"),
+                "dispatch",
+                function ($join) {
+                    $join->on("dispatch.order_id", "=", "od.mst_id")
+                        ->on("dispatch.product_id", "=", "od.product_id");
+                }
+            )
+            ->select(DB::raw("
+        ROUND(SUM(
+            (od.qty - IFNULL(dispatch.dispatched_qty, 0)) * od.price
+        ),2) as total
+    "))
+            ->where("od.is_delete", 0)
             ->value("total");
         return view("orders", compact(
             "orders",
             "totalOrders",
             "totalOrderValue",
-            "totalStockValue"
+            "totalStockValue",
+            "totalPendingOrderValue"
         ));
     }
     public function InitiateOrder(Request $request)

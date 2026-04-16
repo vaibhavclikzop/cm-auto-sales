@@ -47,36 +47,44 @@
 
             </div>
         </div>
-        <div class="row mb-3">
+        <div class="row my-2 mx-2">
 
-    <div class="col-md-4">
-        <div class="card bg-dark text-">
-            <div class="card-body" style="color: #fff !important;">
-                <h5 style="color: #fff !important;">Total Orders</h5>
-                <h4 style="color: #fff !important;">{{ $totalOrders }}</h4>
+            <div class="col-md-3">
+                <div class="card bg-dark text-">
+                    <div class="card-body" style="color: #fff !important;">
+                        <h5 style="color: #fff !important;">Total Orders</h5>
+                        <h4 style="color: #fff !important;">{{ $totalOrders }}</h4>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="card bg-primary" style="color:white !important;">
-            <div class="card-body" style="color: #fff !important;">
-                <h5 style="color: #fff !important;">Total Order Value</h5>
-                <h4 style="color: #fff !important;">₹ {{ number_format($totalOrderValue, 2) }}</h4>
+            <div class="col-md-3">
+                <div class="card bg-info" style="color:white !important;">
+                    <div class="card-body" style="color: #fff !important;">
+                        <h5 style="color: #fff !important;">Total Order Value</h5>
+                        <h4 style="color: #fff !important;">₹ {{ number_format($totalOrderValue, 2) }}</h4>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body" >
-                <h5 style="color: #fff !important;">In Stock Value</h5>
-                <h4 style="color: #fff !important;">₹ {{ number_format($totalStockValue, 2) }}</h4>
+            <div class="col-md-3">
+                <div class="card bg-primary" style="color:white !important;">
+                    <div class="card-body" style="color: #fff !important;">
+                        <h5 style="color: #fff !important;">Pending Order Value</h5>
+                        <h4 style="color: #fff !important;">₹ {{ number_format($totalPendingOrderValue, 2) }}</h4>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-</div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 style="color: #fff !important;">In Stock Value</h5>
+                        <h4 style="color: #fff !important;">₹ {{ number_format($totalStockValue, 2) }}</h4>
+                    </div>
+                </div>
+            </div>
+
+        </div>
         <div class="card-body">
             <table class="table dataTable">
                 <thead>
@@ -86,10 +94,10 @@
                         <th> Customer Name</th>
                         <th>Order Date</th>
                         <th>City</th>
-                        
+
                         <th>Order Value</th>
                         <th>PT Value</th>
-<th>Description</th>
+                        <th>Description</th>
                         <th>Status</th>
                         <th>User</th>
                         <th>Action</th>
@@ -146,13 +154,15 @@
                                                     href="/order-view/{{ $item->id }}?status=pending">Pending Items</a>
                                             </li>
                                             @if ($item->status == 'pending' || $item->status == 'processing')
-                                                @if ($rolePermissions->whereIn('permission_name', ['pending_order',"completed_order"])->where('view', 1)->where('edit', 1)->isNotEmpty())
+                                                @if ($rolePermissions->whereIn('permission_name', ['pending_order', 'completed_order'])->where('view', 1)->where('edit', 1)->isNotEmpty())
                                                     <li><a class="dropdown-item btn btn-info cancelOrder"
                                                             href="/new-order?id={{ $item->id }}" type="button">Edit
                                                             Order</a>
                                                     </li>
                                                 @endif
-                                                @if ($item->status == 'pending' && $rolePermissions->whereIn('permission_name', ['pending_order',"completed_order"])->where('view', 1)->where('del', 1)->isNotEmpty())
+                                                @if (
+                                                    $item->status == 'pending' &&
+                                                        $rolePermissions->whereIn('permission_name', ['pending_order', 'completed_order'])->where('view', 1)->where('del', 1)->isNotEmpty())
                                                     <li><button class="dropdown-item btn btn-danger cancelOrder"
                                                             value="{{ $item->id }}" type="button">Cancel
                                                             Order</button>
@@ -160,7 +170,7 @@
                                                 @endif
                                             @endif
 
-                                            @if ($rolePermissions->whereIn('permission_name', ['pending_order',"completed_order"])->where('view', 1)->where('del', 1)->isNotEmpty())
+                                            @if ($rolePermissions->whereIn('permission_name', ['pending_order', 'completed_order'])->where('view', 1)->where('del', 1)->isNotEmpty())
                                                 @if ($item->status != 'complete' && $item->status != 'pending')
                                                     <li>
                                                         <button class="btn btn-danger dropdown-item scrapOrder"
