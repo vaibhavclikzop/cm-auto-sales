@@ -13,7 +13,6 @@ class SaleReturn extends Controller
     public function SaleReturnList(Request $request)
     {
         $customers =  DB::table("customers")->get();
-
         $data =  DB::table("sale_return_mst as a")
             ->select("a.*", "b.company as customer", "d.order_id", "e.name as user", "c.outward_id")
             ->join("customers as b", "a.customer_id", "b.id")
