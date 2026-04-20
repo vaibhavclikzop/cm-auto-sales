@@ -313,6 +313,7 @@ class OrderManagement extends Controller
 
             ->groupBy("b.order_id");
 
+
         $order = DB::table("order_mst as a")
             ->select(
                 "a.*",
@@ -359,10 +360,21 @@ class OrderManagement extends Controller
                         ->on("dispatch.product_id", "=", "od.product_id");
                 }
             )
-            ->leftJoin("current_stock as cs", function ($join) {
-                $join->on("cs.product_id", "=", "od.product_id")
-                    ->where("cs.location_id", 1);
-            })
+            // ->leftJoin("current_stock as cs", function ($join) {
+            //     $join->on("cs.product_id", "=", "od.product_id")
+            //         ->where("cs.location_id", 1);
+            // })
+            ->leftJoinSub(DB::table("current_stock")
+                    ->select(
+                        "product_id",
+                        DB::raw("SUM(stock) as stock")
+                    )
+                    ->groupBy("product_id"),
+                "cs",
+                function ($join) {
+                    $join->on("cs.product_id", "=", "od.product_id");
+                }
+            )
             ->select(DB::raw("
         ROUND(SUM(
             LEAST(
