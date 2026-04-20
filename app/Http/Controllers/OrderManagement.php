@@ -312,7 +312,47 @@ class OrderManagement extends Controller
             )
 
             ->groupBy("b.order_id");
-
+        $stockValue = DB::table("order_det as od")
+            ->leftJoinSub(
+                DB::table("stock_outward_mst as som")
+                    ->leftJoin("stock_outward_det as sod", "sod.mst_id", "som.id")
+                    ->select(
+                        "som.order_id",
+                        "sod.product_id",
+                        DB::raw("SUM(sod.qty) as dispatched_qty")
+                    )
+                    ->groupBy("som.order_id", "sod.product_id"),
+                "dispatch",
+                function ($join) {
+                    $join->on("dispatch.order_id", "=", "od.mst_id")
+                        ->on("dispatch.product_id", "=", "od.product_id");
+                }
+            )
+            ->leftJoinSub(
+                DB::table("current_stock")
+                    ->select(
+                        "product_id",
+                        DB::raw("SUM(stock) as stock")
+                    )
+                    ->groupBy("product_id"),
+                "cs",
+                function ($join) {
+                    $join->on("cs.product_id", "=", "od.product_id");
+                }
+            )
+            ->select(
+                "od.mst_id",
+                DB::raw("
+            ROUND(SUM(
+                LEAST(
+                    GREATEST((od.qty - IFNULL(dispatch.dispatched_qty, 0)), 0),
+                    IFNULL(cs.stock, 0)
+                ) * od.price
+            ),2) as instock_value
+        ")
+            )
+            ->where("od.is_delete", 0)
+            ->groupBy("od.mst_id");
 
         $order = DB::table("order_mst as a")
             ->select(
@@ -321,7 +361,8 @@ class OrderManagement extends Controller
                 "c.name as user",
                 "b.company",
                 "ot.totalOrderValue as order_value",
-                "pt.pt_value"
+                "pt.pt_value",
+                "sv.instock_value"
             )
             ->join("customers as b", "a.customer_id", "b.id")
             ->join("users as c", "a.user_id", "c.id")
@@ -330,6 +371,9 @@ class OrderManagement extends Controller
             })
             ->leftJoinSub($ptTotal, 'pt', function ($join) {
                 $join->on('pt.order_id', '=', 'a.id');
+            })
+            ->leftJoinSub($stockValue, 'sv', function ($join) {
+                $join->on('sv.mst_id', '=', 'a.id');
             })
             ->where("a.company_id", $request->user->active_inventory)
             ->whereIn("a.user_id", $request->userIds);
@@ -364,7 +408,8 @@ class OrderManagement extends Controller
             //     $join->on("cs.product_id", "=", "od.product_id")
             //         ->where("cs.location_id", 1);
             // })
-            ->leftJoinSub(DB::table("current_stock")
+            ->leftJoinSub(
+                DB::table("current_stock")
                     ->select(
                         "product_id",
                         DB::raw("SUM(stock) as stock")

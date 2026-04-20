@@ -118,7 +118,7 @@
                             <th>{{ date('d-m-y', strtotime($item->created_at)) }}</th>
                             <th>{{ $item->city }}</th>
                             <th>{{ $item->order_value }}</th>
-                            <th>{{ $item->pt_value }}</th>
+                            <td>{{ number_format($item->instock_value, 2) }}</td>
                             <th>{{ $item->pt_value }}</th>
                             <th>{{ $item->description }}</th>
                             <th>{{ $item->status }}</th>
