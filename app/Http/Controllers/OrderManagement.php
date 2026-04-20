@@ -359,9 +359,16 @@ class OrderManagement extends Controller
                         ->on("dispatch.product_id", "=", "od.product_id");
                 }
             )
+            ->leftJoin("current_stock as cs", function ($join) {
+                $join->on("cs.product_id", "=", "od.product_id")
+                    ->where("cs.location_id", 1);
+            })
             ->select(DB::raw("
         ROUND(SUM(
-            (od.qty - IFNULL(dispatch.dispatched_qty, 0)) * od.price
+            LEAST(
+                GREATEST((od.qty - IFNULL(dispatch.dispatched_qty, 0)), 0),
+                IFNULL(cs.stock, 0)
+            ) * od.price
         ),2) as total
     "))
             ->where("od.is_delete", 0)

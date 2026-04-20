@@ -32,6 +32,8 @@
 
                         <th>Invoice Date </th>
                         <th>Invoice Amt. </th>
+                        <th>City </th>
+                        <th>Party Code </th>
                         <th>Status </th>
                         <th>User </th>
                         <th>Action </th>
@@ -51,6 +53,8 @@
 
                             <td>{{ $item->invoice_date }}</td>
                             <td>{{ $item->total }}</td>
+                            <td>{{ $item->city }}</td>
+                            <td>{{ $item->party_code }}</td>
                             <td>{{ $item->status }}</td>
                             <td>{{ $item->user }}</td>
                             <td>

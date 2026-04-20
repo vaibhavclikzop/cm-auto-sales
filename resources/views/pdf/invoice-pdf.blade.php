@@ -38,21 +38,22 @@
         .right {
             text-align: right;
         }
-   .products > tbody th,
-.products > tbody td {
- padding: 0px 3px;
 
-}
-.products > tbody th:first-child,
-.products > tbody td:first-child {
-    border-left: none;
-}
+        .products>tbody th,
+        .products>tbody td {
+            padding: 0px 3px;
 
-.products > tbody th:last-child,
-.products > tbody td:last-child {
-    border-right: none;
-}
+        }
 
+        .products>tbody th:first-child,
+        .products>tbody td:first-child {
+            border-left: none;
+        }
+
+        .products>tbody th:last-child,
+        .products>tbody td:last-child {
+            border-right: none;
+        }
     </style>
 
 </head>
@@ -224,8 +225,8 @@
 
         <table class="products">
 
- 
-          <tbody>
+
+            <tbody>
                 <tr>
 
                     <th>S.No</th>
@@ -246,9 +247,9 @@
 
                 </tr>
 
- 
 
-  
+
+
 
                 @php
                     $sno = 1;
@@ -263,7 +264,13 @@
 
                         $discount_price = $item->price - ($item->price / 100) * $item->discount;
 
-                        $special_discount_price = $discount_price - ($discount_price / 100) * $item->special_discount;
+                        if ($data->discount_type == 'discount') {
+                            $special_discount_price =
+                                $discount_price - ($discount_price / 100) * $item->special_discount;
+                        } else {
+                            $special_discount_price =
+                                $item->price - ($item->price / 100) * ($item->discount + $item->special_discount);
+                        }
 
                         $price = $special_discount_price;
 
@@ -342,12 +349,10 @@
 
                 </tr>
                 <tr>
-                    <td colspan="{{ $type != 'without' ? 12 : 10 }}"
-                        style=" text-align: right">
+                    <td colspan="{{ $type != 'without' ? 12 : 10 }}" style=" text-align: right">
                         Round OFF
                     </td>
-                    <td
-                        style=" text-align: right">
+                    <td style=" text-align: right">
                         {{ number_format_indian(round($grand_total), 2) }}
                     </td>
                 </tr>
@@ -386,7 +391,7 @@
 
                     <br>
 
-                    BRANCH : {{ $data->branch_name}}
+                    BRANCH : {{ $data->branch_name }}
 
                     <br>
 
@@ -394,7 +399,7 @@
 
                     <br>
 
-                    IFSC : {{ $data->ifsc_code}}
+                    IFSC : {{ $data->ifsc_code }}
 
                 </td>
 
@@ -413,7 +418,7 @@
         </table>
 
         <br>
-        
+
         <strong style="margin-left: 5px">Terms & Conditions</strong>
 
         <ol>

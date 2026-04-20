@@ -50,7 +50,7 @@
                     <td>{{ $item->invoice_id }}</td>
                     <td>{{ $item->outward_id }}</td>
                     <td style="white-space: normal; word-break: break-word;">
-                        {{ $item->customer }}
+                        {{ $item->customer }}, ({{$item->company}})
                     </td>
 
                     <td>{{ $item->order_id }}</td>

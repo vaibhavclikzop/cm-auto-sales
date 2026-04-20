@@ -229,10 +229,12 @@ class OutwardStock extends Controller
             ->select(
                 "a.id",
                 "b.order_id",
+                "b.city",
                 "a.outward_id",
                 "a.invoice_date",
                 "a.status",
                 "c.company as customer",
+                "c.party_code",
                 "d.name as user",
                 "a.is_invoice",
                 "a.dispatch_status",
@@ -266,7 +268,7 @@ class OutwardStock extends Controller
 
         $outward = $out
             ->where("b.company_id", $request->user->active_inventory)
-            ->groupBy("a.id", "b.order_id",   "c.company", "d.name", "a.outward_id", "a.invoice_date", "a.status", "a.is_invoice", "a.dispatch_status")
+            ->groupBy("a.id", "b.order_id","b.city",  "c.party_code", "c.company", "d.name", "a.outward_id", "a.invoice_date", "a.status", "a.is_invoice", "a.dispatch_status")
             ->orderBy("a.id", "desc")->get();
 
 
@@ -411,7 +413,7 @@ class OutwardStock extends Controller
 
 
         $out =  DB::table("stock_outward_mst as a")
-            ->select("a.*", "b.order_id",   "c.company as customer", "d.name as user", "c.email")
+            ->select("a.*", "b.order_id",   "c.company as company","c.name as customer", "d.name as user", "c.email")
             ->join("order_mst as b", "a.order_id", "b.id")
             ->join("customers as c", "b.customer_id", "c.id")
             ->join("users as d", "a.user_id", "d.id");
@@ -435,7 +437,7 @@ class OutwardStock extends Controller
     {
 
         $data =  DB::table("stock_outward_mst as a")
-            ->select("a.*", "c.company as customer_name", "c.address", "c.state", "c.city", "c.pincode", "c.email", "c.number", "c.gst", "b.delivery_date", "d.name as user", "e.gst_no", "e.img", "e.name", "e.address as c_address", "e.email as c_email", "e.name as company_name", "e.bank_name","e.branch_name", "e.account_number","e.ifsc_code", "e.state as c_state", "c.state as bill_state", "c.city as bill_city", "c.address as bill_address", "c.pincode as bill_pincode", "c.ship_address", "c.ship_state", "c.ship_city", "c.ship_pincode")
+            ->select("a.*", "c.company as customer_name", "c.address", "c.state", "c.city", "c.pincode", "c.email", "c.number", "c.gst", "b.delivery_date", "d.name as user", "e.gst_no", "e.img", "e.name", "e.address as c_address", "e.email as c_email", "e.name as company_name", "e.bank_name", "e.branch_name", "e.account_number", "e.ifsc_code", "e.state as c_state", "c.state as bill_state", "c.city as bill_city", "c.address as bill_address", "c.pincode as bill_pincode", "c.ship_address", "c.ship_state", "c.ship_city", "c.ship_pincode")
             ->join("order_mst as b", "a.order_id", "b.id")
             ->join("customers as c", "b.customer_id", "c.id")
             ->join("users as d", "a.user_id", "d.id")
@@ -1052,7 +1054,7 @@ class OutwardStock extends Controller
 
         $filename = str_replace(['/', '\\'], '-', $data->invoice_id);
 
-        $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst", "type","qr_code"))
+        $pdf = Pdf::loadView('pdf.invoice-pdf', compact("data", "order_det", "gst", "type", "qr_code"))
             ->setPaper('a4', 'portrait')
             ->setOption('isRemoteEnabled', true);
 
