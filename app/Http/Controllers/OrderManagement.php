@@ -312,6 +312,8 @@ class OrderManagement extends Controller
             )
 
             ->groupBy("b.order_id");
+
+
         $stockValue = DB::table("order_det as od")
             ->leftJoinSub(
                 DB::table("stock_outward_mst as som")
@@ -375,8 +377,8 @@ class OrderManagement extends Controller
             ->leftJoinSub($stockValue, 'sv', function ($join) {
                 $join->on('sv.mst_id', '=', 'a.id');
             })
-            ->where("a.company_id", $request->user->active_inventory)
-            ->whereIn("a.user_id", $request->userIds);
+            ->where("a.company_id", $request->user->active_inventory);
+        // ->whereIn("a.user_id", $request->userIds);
         if ($status) {
             $order->where("a.status", $status);
         }
@@ -388,48 +390,24 @@ class OrderManagement extends Controller
         $totalOrderValue  = $orders->sum('order_value');
         $totalPtValue  = $orders->sum('pt_value');
         $totalPendingOrderValue = $totalOrderValue - $totalPtValue;
-        $totalStockValue = DB::table("order_det as od")
-            ->leftJoinSub(
-                DB::table("stock_outward_mst as som")
-                    ->leftJoin("stock_outward_det as sod", "sod.mst_id", "som.id")
-                    ->select(
-                        "som.order_id",
-                        "sod.product_id",
-                        DB::raw("SUM(sod.qty) as dispatched_qty")
-                    )
-                    ->groupBy("som.order_id", "sod.product_id"),
-                "dispatch",
-                function ($join) {
-                    $join->on("dispatch.order_id", "=", "od.mst_id")
-                        ->on("dispatch.product_id", "=", "od.product_id");
-                }
-            )
-            // ->leftJoin("current_stock as cs", function ($join) {
-            //     $join->on("cs.product_id", "=", "od.product_id")
-            //         ->where("cs.location_id", 1);
-            // })
-            ->leftJoinSub(
-                DB::table("current_stock")
-                    ->select(
-                        "product_id",
-                        DB::raw("SUM(stock) as stock")
-                    )
-                    ->groupBy("product_id"),
-                "cs",
-                function ($join) {
-                    $join->on("cs.product_id", "=", "od.product_id");
-                }
-            )
-            ->select(DB::raw("
-        ROUND(SUM(
-            LEAST(
-                GREATEST((od.qty - IFNULL(dispatch.dispatched_qty, 0)), 0),
-                IFNULL(cs.stock, 0)
-            ) * od.price
-        ),2) as total
-    "))
-            ->where("od.is_delete", 0)
-            ->value("total");
+      $inStockSubQuery = DB::table('order_det as od')
+    ->join('order_mst as om', 'om.id', '=', 'od.mst_id')  
+    ->join('current_stock as cs', 'cs.product_id', '=', 'od.product_id')
+    ->where('od.is_delete', 0)
+    ->where('om.status', $status) 
+    // OR ->where('om.status', 1)
+    ->groupBy('od.product_id', 'cs.stock')
+    ->selectRaw('
+        od.product_id,
+        MAX(od.price) as price,
+        LEAST(SUM(od.qty - od.out_qty), cs.stock) as final_qty
+    ');
+
+$totalStockValue = DB::query()
+    ->fromSub($inStockSubQuery, 't')
+    ->selectRaw('SUM(final_qty * price) as total')
+    ->value('total');
+
         return view("orders", compact(
             "orders",
             "totalOrders",
