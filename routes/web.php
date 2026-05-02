@@ -19,6 +19,7 @@ use SebastianBergmann\CodeCoverage\Report\Xml\Report;
 use App\Http\Controllers\LeadManagement;
 use App\Http\Controllers\meetingController;
 use App\Http\Controllers\meetingManagement;
+use App\Http\Controllers\MergeOrder;
 use App\Http\Controllers\saleReport;
 use App\Http\Controllers\sales\leadAppController;
 use App\Http\Controllers\sales\saleAppController;
@@ -135,12 +136,23 @@ Route::group(['middleware' => ['SuperAdmin']], function () {
   Route::post('saveSpecialOffer', [Masters::class, 'saveSpecialOffer'])->name('saveSpecialOffer');
   Route::post('deleteSpecialOffer', [Masters::class, 'deleteSpecialOffer'])->name('deleteSpecialOffer');
   Route::post('updateProductLocation', [Masters::class, 'updateProductLocation'])->name('updateProductLocation');
+  Route::post('updateBulkDiscount', [Masters::class, 'updateBulkDiscount'])->name('updateBulkDiscount');
+  Route::post('updateBulkDiscountCustomer', [Masters::class, 'updateBulkDiscountCustomer'])->name('updateBulkDiscountCustomer');
 
 
 
 
 
   //order routes
+  
+
+  Route::get('merge-order', [MergeOrder::class, 'MergeOrder'])->name('merge-order');
+  Route::post('getPendingOrder', [MergeOrder::class, 'getPendingOrder'])->name('getPendingOrder');
+  Route::post('getPendingOrderDetails', [MergeOrder::class, 'getPendingOrderDetails'])->name('getPendingOrderDetails');
+  Route::post('saveMergeOrder', [MergeOrder::class, 'saveMergeOrder'])->name('saveMergeOrder');
+
+
+
   Route::get('new-order', [OrderManagement::class, 'NewOrder'])->name('new-order');
   Route::post('UploadRequirementList', [OrderManagement::class, 'UploadRequirementList'])->name('UploadRequirementList');
   Route::post('UploadPORequirementList', [OrderManagement::class, 'UploadPORequirementList'])->name('UploadPORequirementList');

@@ -105,6 +105,10 @@ class AjaxCall extends Controller
             ->groupBy("b.product_id")
             ->first();
 
+        $customers = DB::table("customers")->where("id", $request->customer_id)->first();
+        if ($special_offer->discount<$customers->discount) {
+        $special_offer->discount =$customers->discount;
+        }
         return response()->json([
             "specialOffer" => $special_offer->discount ?? 0,
             "cs"           => $current_stock->stock ?? 0,

@@ -142,10 +142,10 @@ class Masters extends Controller
                     "img" => $file,
                     "pt_prefix" => $request->pt_prefix,
                     "pt_no" => $request->pt_no,
-                    "bank_name"=>$request->bank_name,
-                    "branch_name"=>$request->branch_name,
-                    "account_number"=>$request->account_number,
-                    "ifsc_code"=>$request->ifsc_code,
+                    "bank_name" => $request->bank_name,
+                    "branch_name" => $request->branch_name,
+                    "account_number" => $request->account_number,
+                    "ifsc_code" => $request->ifsc_code,
 
 
                 ));
@@ -163,10 +163,10 @@ class Masters extends Controller
                     "img" => $file,
                     "pt_prefix" => $request->pt_prefix,
                     "pt_no" => $request->pt_no,
-                     "bank_name"=>$request->bank_name,
-                    "branch_name"=>$request->branch_name,
-                    "account_number"=>$request->account_number,
-                    "ifsc_code"=>$request->ifsc_code,
+                    "bank_name" => $request->bank_name,
+                    "branch_name" => $request->branch_name,
+                    "account_number" => $request->account_number,
+                    "ifsc_code" => $request->ifsc_code,
 
                 ));
             }
@@ -800,6 +800,7 @@ class Masters extends Controller
                     "vendor_id" => 0,
                     "description" => $request->description,
                     "product_location" => $request->product_location,
+                    "discount" => $request->discount,
                     "company_id" => $request->user->active_inventory
 
                 ));
@@ -823,6 +824,7 @@ class Masters extends Controller
                     "company_id" => $request->user->active_inventory,
                     "gst" => $request->gst,
                     "product_location" => $request->product_location,
+                    "discount" => $request->discount,
 
                 ));
 
@@ -1414,13 +1416,73 @@ class Masters extends Controller
         try {
 
             DB::table("products")->where("id", $request->product_id)->update(array(
-                "product_location"=>$request->product_location
+                "product_location" => $request->product_location
             ));
         } catch (Exception $e) {
 
             return redirect()->back()->with('error', $e->getMessage());
         }
 
+        return  redirect()->back()->with("success", "Save Successfully");
+    }
+
+    public function updateBulkDiscount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+
+            'discount' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            $messages = $validator->errors();
+            $count = 0;
+            foreach ($messages->all() as $error) {
+                if ($count == 0)
+                    return redirect()->back()->with('error', $error);
+
+                $count++;
+            }
+        }
+
+
+        try {
+
+            DB::table("products")->update(array(
+                "discount" => $request->discount
+            ));
+        } catch (Exception $e) {
+
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+        return  redirect()->back()->with("success", "Save Successfully");
+    }
+
+    public function updateBulkDiscountCustomer(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+
+            'discount' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            $messages = $validator->errors();
+            $count = 0;
+            foreach ($messages->all() as $error) {
+                if ($count == 0)
+                    return redirect()->back()->with('error', $error);
+
+                $count++;
+            }
+        }
+
+        try {
+            DB::table("customers")->update(array(
+                "discount" => $request->discount
+            ));
+        } catch (Exception $e) {
+
+            return redirect()->back()->with('error', $e->getMessage());
+        }
         return  redirect()->back()->with("success", "Save Successfully");
     }
 }

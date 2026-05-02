@@ -5,6 +5,22 @@
             <div class="page-title">
                 <h4>Customer List</h4>
             </div>
+            <div>
+                <form method="POST" action="{{ route('updateBulkDiscountCustomer') }}" class="needs-validation" novalidate>
+                    @csrf
+                    <div class="row">
+                        <div class="col-8">
+                            <label for="">Discount</label>
+                            <input type="number" step="0.01" name="discount" class="form-control" required
+                                placeholder="Enter Discount">
+
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-primary mt-4" type="submit">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
             <div class="">
 
                 @if ($rolePermissions->where('permission_name', 'customers')->where('view', 1)->where('create', 1)->isNotEmpty())
@@ -39,6 +55,7 @@
                         <th>District</th>
                         <th>State</th>
                         <th>Pincode</th>
+                        <th>Discount</th>
                         <th>Active</th>
                         <th>Action</th>
 
@@ -88,6 +105,7 @@
                             <td>{{ $item->state }}</td>
 
                             <td>{{ $item->pincode }}</td>
+                            <td>{{ $item->discount }}</td>
                             @if ($item->active == 1)
                                 <td><span class="badge badge-success">Active</span></td>
                             @else
@@ -339,7 +357,7 @@
                 $("select[name='" + key + "']").val(value)
                 $("textarea[name='" + key + "']").val(value)
             })
-    
+
             $("#state").val(camelcase(data.state))
             $("#ship_state").val(camelcase(data.ship_state))
             $("#city").html(`<option value="${data.city}">${data.city}</option>`)

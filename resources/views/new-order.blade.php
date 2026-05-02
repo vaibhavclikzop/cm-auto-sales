@@ -211,7 +211,7 @@
                         <input type="" name="" id="product_name" class="form-control" disabled>
                     </div>
                     <div>
-                        <label for="">Price</label> <br>
+                        <label for="">Price <span id="product_discount"></span></label> <br>
                         <input type="" name="price" id="price" placeholder="Enter Price"
                             class="form-control" required disabled>
                     </div>
@@ -320,18 +320,18 @@
             $("#coordinates").val($(this).find(":selected").data("coordinates"))
             $("#bill_state").val($(this).find(":selected").data("state"));
             $("#bill_address").val($(this).find(":selected").data("address"));
-            if ($("#bill_state").val()!=null) {
-                      $("#bill_state").trigger($("#bill_state").val()).change();
+            if ($("#bill_state").val() != null) {
+                $("#bill_state").trigger($("#bill_state").val()).change();
             }
-      
+
 
             $("#ship_address").val($(this).find(":selected").data("ship_address"));
             $("#ship_state").val($(this).find(":selected").data("ship_state"));
 
-               if ($("#ship_state").val()!=null) {
-            $("#ship_state").trigger($("#ship_state").val()).change();
+            if ($("#ship_state").val() != null) {
+                $("#ship_state").trigger($("#ship_state").val()).change();
 
-               }
+            }
 
             $("#bill_city_status").text("Fetching....")
 
@@ -508,7 +508,8 @@
                             element.part_no + '"  data-name="' +
                             element.name + '" data-price="' +
                             element.final_price + '" data-brand="' +
-                            element.brand + '" data-order_count="' + element.order_count + '">' +
+                            element.brand + '" data-order_count="' + element.order_count +
+                            '" data-product_discount="' + element.discount + '">' +
                             element.part_no + ' (' + element.name +
                             ')</option>';
                     });
@@ -521,17 +522,26 @@
         }
         var maxDiscount = 0;
         var order_count = 1;
+        var productDiscount = 0;
         $("#product_id").on("change", function() {
+
+           let customer_id= $("#customer_id").val();
+           if (!customer_id) {
+            toastr.error("Select Customer");
+            return;
+           }
             $("#price").val($(this).find(":selected").data("price"))
             $("#product_name").val($(this).find(":selected").data("name"))
+            $("#product_discount").text("Item Disc % " + $(this).find(":selected").data("product_discount"))
             order_count = $(this).find(":selected").data("order_count");
-
+            productDiscount = $(this).find(":selected").data("product_discount");
             $("#orderCount").text("Qty  Count : " + order_count)
             $.ajax({
                 url: "/getSpecialOffer",
                 type: "POST",
                 data: {
                     id: $(this).val(),
+                    customer_id: customer_id,
 
                 },
                 headers: {
@@ -567,6 +577,10 @@
         $("#discount").on("keyup", function() {
             let discount = parseFloat($(this).val());
             maxDiscount = parseFloat(maxDiscount);
+            productDiscount = parseFloat(productDiscount);
+            if (productDiscount > maxDiscount) {
+                maxDiscount=productDiscount;
+            }
 
             if (discount > maxDiscount) {
                 toastr.error("Discount can not be more then max discount")
@@ -626,7 +640,7 @@
                 qty,
                 price,
                 discount,
-                      order_det_id:0
+                order_det_id: 0
 
             });
             sno++;
@@ -698,7 +712,7 @@
                                 qty,
                                 price,
                                 discount,
-                                order_det_id:0
+                                order_det_id: 0
 
                             });
                             sno++;

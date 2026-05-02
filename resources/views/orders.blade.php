@@ -112,7 +112,11 @@
                     @foreach ($orders as $item)
                         <tr>
                             <th>{{ $sno++ }}</th>
-                            <th>{{ $item->order_id }}</th>
+                            <th>{{ $item->order_id }} <br>
+                            @if ($item->is_merge==1)
+                                <span class="badge bg-success">Merge Order</span>
+                            @endif    
+                            </th>
                             <th>{{ $item->company }}</th>
 
                             <th>{{ date('d-m-y', strtotime($item->created_at)) }}</th>

@@ -240,7 +240,8 @@
                                      <i class="fa fa-gear me-2" aria-hidden="true"></i> Setting</a>
                              @endif
 
-                               <a class="dropdown-item pb-0" href="/team-hierarchy"  ><i data-feather="users"></i><span>Team hierarchy</span></a>
+                             <a class="dropdown-item pb-0" href="/team-hierarchy"><i
+                                     data-feather="users"></i><span>Team hierarchy</span></a>
                              <a class="dropdown-item pb-0" href="#" data-bs-toggle="modal"
                                  data-bs-target="#installGuideModal"><i data-feather="download"></i><span>Download
                                      App</span></a>
@@ -467,6 +468,10 @@
                                                  <li><a href="/orders?status=cancel">Cancelled Order </a></li>
                                              @endif
 
+                                             @if ($rolePermissions->where('permission_name', 'create_order')->where('view', 1)->isNotEmpty())
+                                                 <li><a href="/merge-order">Merge Order </a></li>
+                                             @endif
+
 
                                          </ul>
                                      </li>
@@ -581,7 +586,8 @@
                                              </li>
                                              <li><a href="/category-wise-report">Category Wise Report</a></li>
                                              <li><a href="/purchase-report">Purchase Report</a></li>
-                                             <li><a href="/purchase-report-product-wise">Purchase Report Product Wise</a></li>
+                                             <li><a href="/purchase-report-product-wise">Purchase Report Product
+                                                     Wise</a></li>
                                              <li><a href="/purchase-return-report">Purchase Return Report</a></li>
                                              <li><a href="/sale-return-report">Sale Return Report</a></li>
 

@@ -52,13 +52,26 @@
                     </div>
 
                     <div class="col-md-2 d-flex">
-                        <button class="btn btn-primary">Search</button>
+                        <button class="btn btn-primary mx-1">Search</button>
                         <a href="{{ url()->current() }}" class="btn btn-secondary">Reset</a>
                     </div>
 
                 </form>
 
+                <form method="POST" action="{{ route('updateBulkDiscount') }}" class="needs-validation" novalidate>
+                    @csrf
+                    <div class="row">
+                        <div class="col-4">
+                            <label for="">Discount</label>
+                            <input type="number" step="0.01" name="discount" class="form-control" required
+                                placeholder="Enter Discount">
 
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-primary mt-4" type="submit">Update</button>
+                        </div>
+                    </div>
+                </form>
 
             </div>
             <div>
@@ -78,7 +91,7 @@
                 <thead>
                     <tr>
                         <th>S.no</th>
-                        <th> Image</th>
+
 
                         <th> Brand</th>
                         <th> Category</th>
@@ -116,7 +129,7 @@
                         <tr>
                             <td>{{ $sno++ }}</td>
 
-                            <td><img src="/product images/{{ $item->image }}" width="80px"></td>
+
 
                             <td>{{ $item->brand_name }}</td>
                             <td>{{ $item->category_name }}</td>
@@ -139,23 +152,24 @@
 
 
                             <td>
-                                
-                                              @if ($rolePermissions->where('permission_name', 'product')->where('view', 1)->where('edit', 1)->isNotEmpty())
-                                <button class="btn btn-primary btn-sm edit" type="button" data-id="{{ $item->id }}"
-                                    data-name="{{ $item->name }}" data-brand_id="{{ $item->brand_id }}"
-                                    data-category_id="{{ $item->category_id }}"
-                                    data-sub_category_id="{{ $item->sub_category_id }}"
-                                    data-category_name="{{ $item->category_name }}"
-                                    data-sub_category_name="{{ $item->sub_category_name }}"
-                                    data-part_no="{{ $item->part_no }}" data-price="{{ $item->price }}"
-                                    data-min_stock="{{ $item->min_stock }}" data-unit_type="{{ $item->uom }}"
-                                    data-warranty_days="{{ $item->warranty_days }}" data-hsn_code="{{ $item->hsn_code }}"
-                                    data-description="{{ $item->description }}" data-active="{{ $item->active }}"
-                                    data-sale_price="{{ $item->sale_price }}"
-                                    data-purchase_price="{{ $item->purchase_price }}"
-                                    data-product_location="{{ $item->product_location }}"
-                                    data-gst="{{ $item->gst }}"><i class="fa fa-pencil" aria-hidden="true"></i></button>
-                                    @endif
+
+                                @if ($rolePermissions->where('permission_name', 'product')->where('view', 1)->where('edit', 1)->isNotEmpty())
+                                    <button class="btn btn-primary btn-sm edit" type="button"
+                                        data-id="{{ $item->id }}" data-name="{{ $item->name }}"
+                                        data-brand_id="{{ $item->brand_id }}" data-category_id="{{ $item->category_id }}"
+                                        data-sub_category_id="{{ $item->sub_category_id }}"
+                                        data-category_name="{{ $item->category_name }}"
+                                        data-sub_category_name="{{ $item->sub_category_name }}"
+                                        data-part_no="{{ $item->part_no }}" data-price="{{ $item->price }}"
+                                        data-min_stock="{{ $item->min_stock }}" data-unit_type="{{ $item->uom }}"
+                                        data-warranty_days="{{ $item->warranty_days }}"
+                                        data-hsn_code="{{ $item->hsn_code }}" data-description="{{ $item->description }}"
+                                        data-active="{{ $item->active }}" data-sale_price="{{ $item->sale_price }}"
+                                        data-purchase_price="{{ $item->purchase_price }}"
+                                        data-product_location="{{ $item->product_location }}"
+                                        data-discount="{{ $item->discount }}" data-gst="{{ $item->gst }}"><i
+                                            class="fa fa-pencil" aria-hidden="true"></i></button>
+                                @endif
                             </td>
 
                         </tr>
@@ -263,6 +277,12 @@
                         <div class="col-md-4 mt-3">
                             <label for="">GST</label>
                             <input type="number" class="form-control" name="gst" id="gst" required>
+
+                        </div>
+                        <div class="col-md-4 mt-3 ">
+                            <label for="">Discount</label>
+                            <input type="number" id="discount" name="discount" class="form-control"
+                                placeholder="Enter discount" step="0.01" required>
 
                         </div>
 
@@ -399,6 +419,7 @@
             $("#product_location").val($(this).data("product_location"));
 
             $("#purchase_price").val($(this).data("purchase_price"));
+            $("#discount").val($(this).data("discount"));
             $("#modal_name").text("Update Product");
             $("#exampleModal").modal("show");
         });
