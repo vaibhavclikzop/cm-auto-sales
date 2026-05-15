@@ -1277,13 +1277,9 @@ class Masters extends Controller
     public function saveSpecialOffer(Request $request)
     {
         $validator = Validator::make($request->all(), [
-
             'product_id' => 'required',
             'discount' => 'required',
             'expire_date' => 'required',
-
-
-
         ]);
 
         if ($validator->fails()) {
@@ -1323,11 +1319,7 @@ class Masters extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-
             'id' => 'required',
-
-
-
         ]);
 
         if ($validator->fails()) {
@@ -1343,9 +1335,6 @@ class Masters extends Controller
 
 
         try {
-
-
-
             DB::table("special_offer")->whereIn("id", explode(",", $request->id))->delete();
         } catch (Exception $e) {
 
@@ -1400,7 +1389,6 @@ class Masters extends Controller
 
 
         ]);
-
         if ($validator->fails()) {
             $messages = $validator->errors();
             $count = 0;
@@ -1411,8 +1399,6 @@ class Masters extends Controller
                 $count++;
             }
         }
-
-
         try {
 
             DB::table("products")->where("id", $request->product_id)->update(array(

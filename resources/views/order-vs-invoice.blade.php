@@ -29,6 +29,7 @@
                     <tr>
                         <th>S.No</th>
                         <th>Customer</th>
+                        <th>Party Code</th>
                         <th>Order ID</th>
                         <th>Order Date</th>
                         <th>Order Value</th>
@@ -49,7 +50,13 @@
                         <tr>
                             <td>{{ $sno++ }}</td>
                             <td>{{ $item->company }}</td>
-                            <td>{{ $item->order_id }}</td>
+                            <td>{{ $item->party_code }}</td>
+                            <td>{{ $item->order_id }} <br>
+                                @if ($item->is_merge == 1)
+                                    <span class="badge bg-success">Merge</span>
+                                @endif
+
+                            </td>
                             <td>{{ $item->order_date }}</td>
                             <td>{{ $item->orderValue }}</td>
                             <td>{{ $item->invoice_date }}</td>

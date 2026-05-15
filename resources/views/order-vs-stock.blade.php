@@ -82,7 +82,13 @@
                 <tr>
 
                     <td>{{ $sno++ }}</td>
-                    <td>{{ $item->order_id }}</td>
+                    <td>{{ $item->order_id }}
+                        <br>
+                            @if ($item->is_merge==1)
+                                <span class="badge bg-success">Merge</span>
+                            @endif
+
+                    </td>
                     <td>{{ date('d-m-Y', strtotime($item->created_at)) }}</td>
                     <td>{{ $item->type }}</td>
                     <td>{{ $item->party_code }}</td>

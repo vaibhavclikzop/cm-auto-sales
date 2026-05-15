@@ -18,7 +18,7 @@ class MergeOrder extends Controller
 
     public function getPendingOrder(Request $request)
     {
-        return  DB::table('order_mst')->where("customer_id", $request->id)->whereIn("status", ["pending", "processing"])->get();
+        return  DB::table('order_mst')->where("customer_id", $request->id)->whereIn("status", [ "processing"])->get();
     }
     public function getPendingOrderDetails(Request $request)
     {

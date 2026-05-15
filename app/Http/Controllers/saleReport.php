@@ -107,6 +107,7 @@ class saleReport extends Controller
                 "a.id as voucher_no",
                 "a.invoice_convert_date",
                 "e.company as customer",
+                "e.party_code",
                 "a.invoice_id",
                 "a.created_at as date",
                 "e.gst as gst_no",
@@ -257,6 +258,7 @@ class saleReport extends Controller
             "a.id",
             "a.invoice_convert_date",
             "e.company",
+            "e.party_code",
             "a.invoice_id",
             "a.created_at",
             "e.gst",
@@ -637,6 +639,7 @@ class saleReport extends Controller
                 "c.name",
                 "c.part_no",
                 "x.company as company",
+                "x.party_code",
                 "b.invoice_id",
                 "u.name as user",
                 "x.city1",
@@ -774,7 +777,8 @@ class saleReport extends Controller
             "b.invoice_convert_date",
             "d.created_at",
             "x.city",
-            "x.city1"
+            "x.city1",
+            "x.party_code"
         )->get();
 
         // echo "<pre>";
@@ -896,6 +900,7 @@ class saleReport extends Controller
                 "b.product_location",
                 "b.sale_price",
                 "x.status",
+                "x.is_merge",
                 DB::raw("SUM(a.qty) as ordered_qty"),
                 DB::raw("SUM(a.out_qty) as order_invoice_qty"),
                 DB::raw("SUM(a.qty - a.out_qty) as pending_qty"),
@@ -939,7 +944,8 @@ class saleReport extends Controller
                 "s.stock",
                 "o.invoice_qty",
                 "o.picked_qty",
-                "o.cancel_qty"
+                "o.cancel_qty",
+                "x.is_merge"
             )
             ->get();
 
@@ -1275,16 +1281,15 @@ class saleReport extends Controller
             ->groupBy("od.mst_id");
 
 
-        /* -----------------------------------------
-            2️⃣ MAIN QUERY (BASE = ORDER)
-            ------------------------------------------*/
 
         $dt = DB::table("order_mst as d")
 
             ->select(
                 "x.company",
+                "x.party_code",
                 "d.order_id",
                 "d.status",
+                "d.is_merge",
                 DB::raw("DATE(d.created_at) as order_date"),
 
                 /* Order Total */
@@ -1382,6 +1387,7 @@ class saleReport extends Controller
 
         $data = $dt->groupBy(
             "x.company",
+            "x.party_code",
             "d.order_id",
             "d.created_at",
             "ot.totalOrderValue",
@@ -1390,7 +1396,8 @@ class saleReport extends Controller
             "d.status",
             "b.invoice_convert_date",
             "b.invoice_id",
-            "b.is_invoice"
+            "b.is_invoice",
+            "d.is_merge",
         )->get();
 
 

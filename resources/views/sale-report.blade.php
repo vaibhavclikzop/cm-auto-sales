@@ -60,6 +60,7 @@
                         <th>Sno</th>
 
                         <th>Consignee/Buyer</th>
+                        <th>Party Code</th>
 
                         <th>INVOICE NO</th>
                         <th>INVOICE DATE</th>
@@ -86,6 +87,7 @@
                             <td style="white-space: normal; word-break: break-word;">
                                 {{ $item->customer }}
                             </td>
+                               <td>{{ $item->party_code }}</td>
                             <td>{{ $item->invoice_id }}</td>
 
                             <td>{{ date('d-m-Y', strtotime($item->invoice_convert_date)) }}</td>

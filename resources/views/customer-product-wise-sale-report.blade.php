@@ -68,7 +68,9 @@
                 <thead>
                     <tr>
                         <th>S.No</th>
+                         <th>Party Code</th>
                         <th>Customer</th>
+                       
                         <th>DSR</th>
                         <th>District</th>
                         <th>City</th>
@@ -98,9 +100,13 @@
                         @endphp
                         <tr>
                             <td>{{ $sno++ }}</td>
+                               <td >
+                                {{ $item->party_code }}
+                            </td>
                             <td style="min-width:150px; white-space: normal; word-break: break-word;">{{ $item->company }}
                             </td>
-                            <td>{{ $item->user  ?? "NA"}}</td>
+                         
+                            <td>{{ $item->user ?? 'NA' }}</td>
                             <td>{{ $item->city }}</td>
                             <td>{{ $item->city1 }}</td>
                             <td>{{ date('d-m-Y', strtotime($item->order_date)) }}</td>
@@ -125,7 +131,7 @@
 
                 <tfoot>
                     <tr>
-                        <th colspan="11" style="text-align: right">Total</th>
+                        <th colspan="12" style="text-align: right">Total</th>
                         <th>{{ $total_qty }}</th>
                         <th></th>
                         <th></th>

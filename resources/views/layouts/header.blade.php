@@ -35,6 +35,7 @@
      <script type="text/javascript" src='/richtexteditor/plugins/all_plugins.js'></script>
      <script src="https://code.jquery.com/jquery-2.2.4.min.js"
          integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
  </head>
 
  <body>
@@ -572,7 +573,7 @@
                                          <ul>
                                              <li><a href="/po-report">PO Report</a></li>
 
-                                             <li><a href="/sale-report-tally">Sale Report Tally</a></li>
+                                             {{-- <li><a href="/sale-report-tally">Sale Report Tally</a></li> --}}
                                              <li><a href="/sale-report">Sale Report</a></li>
                                              <li><a href="/customer-wise-sale-report">Customer Wise Sale Report</a>
                                              </li>
@@ -596,33 +597,32 @@
 
 
 
+                                     <li class="submenu">
+                                         <a href="javascript:void(0);">
+                                             <i data-feather="layers"></i><span>Tally Reports</span><span
+                                                 class="menu-arrow"></span>
+                                         </a>
+                                         <ul>
+                                             <li><a href="/tally/sale-report">Sale Report</a></li>
+                                             <li><a href="/tally/purchase-report">Purchase Report</a></li>
+                                             <li><a href="/tally/sale-return-report">Sale Return</a></li>
+
+                                         </ul>
+                                     </li>
+
+
+                                     {{-- <li class="submenu">
+                                         <a href="javascript:void(0);">
+                                             <i data-feather="layers"></i><span>Audit Report</span><span
+                                                 class="menu-arrow"></span>
+                                         </a>
+                                         <ul>
+                                             <li><a href="/audit-setting">Audit Setting</a></li>
+                                             <li><a href="/audit-report">Audit Report</a></li>
+
+                                         </ul>
+                                     </li> --}}
                                  </ul>
-
-
-
-                                 {{-- <ul>
-                                         <li class="submenu">
-                                             <a href="javascript:void(0);">
-                                                 <i data-feather="layers"></i><span>Audit Report</span><span
-                                                     class="menu-arrow"></span>
-                                             </a>
-                                             <ul>
-                                                 <li><a href="/audit-setting">Audit Setting</a></li>
-                                                 <li><a href="/audit-report">Audit Report</a></li>
-
-
-
-
-                                             </ul>
-                                         </li>
-
-
-
-                                     </ul>
-                         --}}
-
-
-
                              </li>
                          @endif
                          @foreach ($rolePermissions as $item)

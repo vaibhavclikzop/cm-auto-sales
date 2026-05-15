@@ -24,6 +24,7 @@ use App\Http\Controllers\saleReport;
 use App\Http\Controllers\sales\leadAppController;
 use App\Http\Controllers\sales\saleAppController;
 use App\Http\Controllers\sendEmail;
+use App\Http\Controllers\Tally\TallyReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -144,7 +145,7 @@ Route::group(['middleware' => ['SuperAdmin']], function () {
 
 
   //order routes
-  
+
 
   Route::get('merge-order', [MergeOrder::class, 'MergeOrder'])->name('merge-order');
   Route::post('getPendingOrder', [MergeOrder::class, 'getPendingOrder'])->name('getPendingOrder');
@@ -188,7 +189,7 @@ Route::group(['middleware' => ['SuperAdmin']], function () {
   Route::get('inward-report', [InwardStock::class, 'InwardReport'])->name('inward-report');
   Route::get('inward-report-view/{id}', [InwardStock::class, 'InwardReportView'])->name('inward-report-view');
   Route::post('deleteStockInward', [InwardStock::class, 'deleteStockInward'])->name('deleteStockInward');
-Route::post('/update-stock-inward',[InwardStock::class,'updateStockInward'])->name('updateStockInward');
+  Route::post('/update-stock-inward', [InwardStock::class, 'updateStockInward'])->name('updateStockInward');
 
   Route::get('inward-product-wise', [InwardStock::class, 'inwardProductWise'])->name('inward-product-wise');
   // outward stock routes
@@ -326,7 +327,15 @@ Route::post('/update-stock-inward',[InwardStock::class,'updateStockInward'])->na
   Route::get('order-vs-invoice', [saleReport::class, 'orderVsInvoice'])->name('order-vs-invoice');
   Route::get('in-out-report', [saleReport::class, 'inOutReport'])->name('in-out-report');
 
-  
+
+
+  //tally reports
+
+  Route::get('tally/sale-report', [TallyReportController::class, 'saleReport'])->name('tally/sale-report');
+  Route::get('tally/purchase-report', [TallyReportController::class, 'purchaseReport'])->name('tally/purchase-report');
+  Route::get('tally/sale-return-report', [TallyReportController::class, 'saleReturnReport'])->name('tally/sale-return-report');
+
+
 
   Route::prefix('meetings')->group(function () {
     Route::get('/', [meetingController::class, 'index'])->name('meetings.index');
@@ -400,4 +409,4 @@ Route::group(['middleware' => ['leadAppAuth']], function () {
   Route::get('/lead-app/logout', [leadAppController::class, 'logout'])->name('lead-app/logout');
   Route::post('leadApp/updateActiveInventory', [Admin::class, 'updateActiveInventory'])->name('leadApp/updateActiveInventory');
 });
-  Route::get('download-invoice/{id}', [OutwardStock::class, 'downloadInvoice'])->name('downloadInvoice');
+Route::get('download-invoice/{id}', [OutwardStock::class, 'downloadInvoice'])->name('downloadInvoice');
