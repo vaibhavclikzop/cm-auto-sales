@@ -21,6 +21,7 @@
                     <tr>
                         <th>S.no</th>
                         <th> Name</th>
+                        <th> Max Discount</th>
 
 
                         <th>Action</th>
@@ -36,13 +37,14 @@
                             <td>{{ $sno++ }}</td>
 
                             <td>{{ $item->name }}</td>
+                            <td>{{ $item->max_discount }}</td>
 
 
 
                             <td>
                                 @if ($rolePermissions->where('permission_name', 'brand')->where('view', 1)->where('edit', 1)->isNotEmpty())
                                     <button class="btn btn-primary btn-sm edit" type="button" data-id="{{ $item->id }}"
-                                        data-name="{{ $item->name }}"><i class="fa fa-pencil"
+                                        data-name="{{ $item->name }}"  data-max_discount="{{ $item->max_discount }}"><i class="fa fa-pencil"
                                             aria-hidden="true"></i></button>
                                 @endif
                             </td>
@@ -80,6 +82,12 @@
 
                         </div>
 
+                        
+                        <div class="col-md-12">
+                            <label for="">Max Discount</label>
+                            <input type="number" step="0.01" name="max_discount" id="max_discount" class="form-control" required>
+
+                        </div>
 
 
 
@@ -100,6 +108,7 @@
         $(document).on("click", ".edit", function() {
             $("#id").val($(this).data("id"));
             $("#name").val($(this).data("name"));
+            $("#max_discount").val($(this).data("max_discount"));
             $("#modal_name").text("Update Brand");
             $("#exampleModal").modal("show");
         });

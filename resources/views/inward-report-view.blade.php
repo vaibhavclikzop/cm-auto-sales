@@ -127,18 +127,34 @@
 
 
                         <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">Qty</th>
-                        <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">Price</th>
+                        <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">Rate/Pcs</th>
+                        <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">Taxable Amt.</th>
+                        <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">GST</th>
+
                         <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">Total</th>
 
 
                         @php
                             $total_qty = 0;
                             $grand_total = 0;
+                            $taxable = 0;
+                            $totalRate = 0;
+                            $totalTaxable = 0;
+                            $totalGST = 0;
                         @endphp
                         @foreach ($stock_inward_det as $item)
                             @php
                                 $total_qty += $item->qty;
-                                $grand_total += $item->price * $item->qty;
+                             
+                                $rate = round($item->price, 2);
+
+                                $taxable = round($rate * $item->qty, 2);
+
+                                $gst = round(( ($item->price/100*$item->gst)) * $item->qty, 2);
+                                $totalRate += $rate;
+                                $totalTaxable += $taxable;
+                                $totalGST += $gst;
+                                   $grand_total += $item->qty * $item->price+$gst;
                             @endphp
                             <tr>
                                 <td style="border: 1px solid gray;padding:1px 4px; font-size:11px">{{ $sno++ }}</td>
@@ -161,10 +177,15 @@
 
                                 <td style="border: 1px solid gray;padding:1px 4px; font-size:11px"> {{ $item->qty }}
                                     {{ $item->uom }}</td>
-                                <td style="border: 1px solid gray;padding:1px 4px; font-size:11px"> {{ $item->price }}
+                                <td style="border: 1px solid gray;padding:1px 4px; font-size:11px"> {{ $rate }}
+                                </td>
+                                <td style="border: 1px solid gray;padding:1px 4px; font-size:11px"> {{ $taxable }}
+                                </td>
+                                <td style="border: 1px solid gray;padding:1px 4px; font-size:11px">{{ $item->gst }} %
+                                    <br> {{ $gst }}
                                 </td>
                                 <td style="border: 1px solid gray;padding:1px 4px; font-size:11px">
-                                    {{ $item->qty * $item->price }}
+                                    {{ $item->qty * $item->price+$gst }}
                                 </td>
 
                             </tr>
@@ -173,9 +194,59 @@
                             <th colspan="5"
                                 style="border: 1px solid gray;padding:1px 4px; font-size:11px; text-align: right">Total
                             </th>
-                            <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">{{ $total_qty }}</th>
-                            <th style="border: 1px solid gray;padding:1px 4px; font-size:11px"></th>
+                            <th colspan="2" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $total_qty }}</th>
+                            {{-- <th colspan="" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $totalRate }}</th> --}}
+                            <th colspan="" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $totalTaxable }}</th>
+                            <th colspan="" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $totalGST }}</th>
                             <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">{{ $grand_total }}</th>
+                        </tr>
+                        <tr>
+                            <th colspan="8"
+                                style="border: 1px solid gray;padding:1px 4px; font-size:11px; text-align: right">Discount
+                            </th>
+                            <th colspan="" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $stock_inward_mst->discount }} % </th>
+
+
+                            <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ ($grand_total / 100) * $stock_inward_mst->discount }}</th>
+                        </tr>
+                        <tr>
+                            <th colspan="8"
+                                style="border: 1px solid gray;padding:1px 4px; font-size:11px; text-align: right">Adjust
+                                Amount
+                            </th>
+                            <th colspan="" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $stock_inward_mst->adj_amt_type ?? 'NA' }} </th>
+
+
+                            <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                {{ $stock_inward_mst->adj_amt }}</th>
+                        </tr>
+
+                        <tr>
+                            <th colspan="8"
+                                style="border: 1px solid gray;padding:1px 4px; font-size:11px; text-align: right">Total
+                                Amount
+                            </th>
+                            <th colspan="" style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                            </th>
+
+
+                            <th style="border: 1px solid gray;padding:1px 4px; font-size:11px">
+                                @php
+                                    $total = $grand_total - ($grand_total / 100) * $stock_inward_mst->discount;
+                                    if ($stock_inward_mst->adj_amt_type == 'credit') {
+                                        $total = $total + $stock_inward_mst->adj_amt;
+                                    } elseif ($stock_inward_mst->adj_amt_type == 'debit') {
+                                        $total = $total - $stock_inward_mst->adj_amt;
+                                    }
+                                @endphp
+                                {{ $total }}</th>
                         </tr>
 
 

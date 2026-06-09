@@ -170,144 +170,207 @@ class TallyReportController extends Controller
         return view("tally-report.sale-report", compact("data"));
     }
 
-    public function purchaseReport(Request $request)
-    {
+public function purchaseReport(Request $request)
+{
+    $fromDate = request("fromDt", date("Y-m-d"));
+    $toDate = request("toDt", date("Y-m-d"));
 
-        $fromDate = request("fromDt", date("Y-m-d"));
-        $toDate = request("toDt", date("Y-m-d"));
-        $data = DB::table("stock_inward_mst as a")
-            ->select(
-                "a.id",
-                "a.invoice_date as voucher_date",
+    $data = DB::table("stock_inward_mst as a")
+        ->select(
+            "a.id",
+            "a.invoice_date as voucher_date",
 
-                DB::raw("'Purchase' as voucher_type"),
+            DB::raw("'Purchase' as voucher_type"),
 
-                "a.invoice_no as voucher_no",
-                "a.invoice_no as supplier_invoice_no",
-                "a.invoice_date as supplier_invoice_date",
+            "a.invoice_no as voucher_no",
+            "a.invoice_no as supplier_invoice_no",
+            "a.invoice_date as supplier_invoice_date",
 
-                "v.name as party_ledger_name",
-                "v.gst as party_gstin",
+            "v.name as party_ledger_name",
+            "v.gst as party_gstin",
 
-                // Taxable Amount
-                DB::raw("
-            ROUND(SUM(
-                (b.qty * b.price) / (1 + (b.gst / 100))
-            ),2) as taxable_amount
-        "),
+            // Taxable Amount (After Discount)
+            DB::raw("
+                ROUND(
+                    SUM(
+                        (
+                            (
+                                (b.qty * b.price)
+                                * (100 - IFNULL(b.discount,0))
+                                / 100
+                            )
+                            /
+                            (1 + (b.gst / 100))
+                        )
+                    ),
+                2) as taxable_amount
+            "),
 
-                // IGST Rate
-                DB::raw("
-            CASE 
-                WHEN LEFT(v.gst,2) != LEFT(c.gst_no,2)
-                THEN MAX(b.gst)
-                ELSE 0
-            END as igst_rate
-        "),
-
-                // OUTPUT IGST Amount
-                DB::raw("
-            ROUND(SUM(
-                CASE 
+            // IGST Rate
+            DB::raw("
+                CASE
                     WHEN LEFT(v.gst,2) != LEFT(c.gst_no,2)
-                    THEN (
-                        (b.qty * b.price)
-                        -
-                        ((b.qty * b.price) / (1 + (b.gst / 100)))
-                    )
+                    THEN MAX(b.gst)
                     ELSE 0
-                END
-            ),2) as output_igst_amount
-        "),
+                END as igst_rate
+            "),
 
-                // SGST Rate
-                DB::raw("
-            CASE 
-                WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
-                THEN MAX(b.gst)/2
-                ELSE 0
-            END as sgst_rate
-        "),
+            // IGST Amount (After Discount)
+            DB::raw("
+                ROUND(
+                    SUM(
+                        CASE
+                            WHEN LEFT(v.gst,2) != LEFT(c.gst_no,2)
+                            THEN
+                            (
+                                (
+                                    (b.qty * b.price)
+                                    * (100 - IFNULL(b.discount,0))
+                                    / 100
+                                )
+                                -
+                                (
+                                    (
+                                        (b.qty * b.price)
+                                        * (100 - IFNULL(b.discount,0))
+                                        / 100
+                                    )
+                                    /
+                                    (1 + (b.gst / 100))
+                                )
+                            )
+                            ELSE 0
+                        END
+                    ),
+                2) as output_igst_amount
+            "),
 
-                // OUTPUT SGST Amount
-                DB::raw("
-            ROUND(SUM(
-                CASE 
+            // SGST Rate
+            DB::raw("
+                CASE
                     WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
-                    THEN (
+                    THEN MAX(b.gst)/2
+                    ELSE 0
+                END as sgst_rate
+            "),
+
+            // SGST Amount (After Discount)
+            DB::raw("
+                ROUND(
+                    SUM(
+                        CASE
+                            WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
+                            THEN
+                            (
+                                (
+                                    (
+                                        (
+                                            (b.qty * b.price)
+                                            * (100 - IFNULL(b.discount,0))
+                                            / 100
+                                        )
+                                        -
+                                        (
+                                            (
+                                                (b.qty * b.price)
+                                                * (100 - IFNULL(b.discount,0))
+                                                / 100
+                                            )
+                                            /
+                                            (1 + (b.gst / 100))
+                                        )
+                                    )
+                                ) / 2
+                            )
+                            ELSE 0
+                        END
+                    ),
+                2) as output_sgst_amount
+            "),
+
+            // CGST Rate
+            DB::raw("
+                CASE
+                    WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
+                    THEN MAX(b.gst)/2
+                    ELSE 0
+                END as cgst_rate
+            "),
+
+            // CGST Amount (After Discount)
+            DB::raw("
+                ROUND(
+                    SUM(
+                        CASE
+                            WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
+                            THEN
+                            (
+                                (
+                                    (
+                                        (
+                                            (b.qty * b.price)
+                                            * (100 - IFNULL(b.discount,0))
+                                            / 100
+                                        )
+                                        -
+                                        (
+                                            (
+                                                (b.qty * b.price)
+                                                * (100 - IFNULL(b.discount,0))
+                                                / 100
+                                            )
+                                            /
+                                            (1 + (b.gst / 100))
+                                        )
+                                    )
+                                ) / 2
+                            )
+                            ELSE 0
+                        END
+                    ),
+                2) as output_cgst_amount
+            "),
+
+            // Total Amount After Discount (Inclusive GST)
+            DB::raw("
+                ROUND(
+                    SUM(
                         (
                             (b.qty * b.price)
-                            -
-                            ((b.qty * b.price) / (1 + (b.gst / 100)))
-                        ) / 2
-                    )
-                    ELSE 0
-                END
-            ),2) as output_sgst_amount
-        "),
+                            * (100 - IFNULL(b.discount,0))
+                            / 100
+                        )
+                    ),
+                2) as total_amount
+            "),
 
-                // CGST Rate
-                DB::raw("
-            CASE 
-                WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
-                THEN MAX(b.gst)/2
-                ELSE 0
-            END as cgst_rate
-        "),
+            DB::raw("'' as narration")
+        )
 
-                // OUTPUT CGST Amount
-                DB::raw("
-            ROUND(SUM(
-                CASE 
-                    WHEN LEFT(v.gst,2) = LEFT(c.gst_no,2)
-                    THEN (
-                        (
-                            (b.qty * b.price)
-                            -
-                            ((b.qty * b.price) / (1 + (b.gst / 100)))
-                        ) / 2
-                    )
-                    ELSE 0
-                END
-            ),2) as output_cgst_amount
-        "),
+        ->join("stock_inward_det as b", "a.id", "b.mst_id")
+        ->join("vendor as v", "a.vendor_id", "v.id")
+        ->join("company as c", "a.company_id", "c.id")
 
-                // Total Amount
-                DB::raw("
-            ROUND(SUM(b.qty * b.price),2) as total_amount
-        "),
+        ->whereDate("a.invoice_date", ">=", $fromDate)
+        ->whereDate("a.invoice_date", "<=", $toDate)
 
-                DB::raw("'' as narration")
-            )
+        ->where("a.company_id", $request->user->active_inventory)
 
-            ->join("stock_inward_det as b", "a.id", "b.mst_id")
+        ->groupBy(
+            "a.id",
+            "a.invoice_date",
+            "a.invoice_no",
+            "v.name",
+            "v.gst",
+            "c.gst_no"
+        )
 
-            ->join("vendor as v", "a.vendor_id", "v.id")
+        ->orderBy("a.invoice_date", "asc")
 
-            ->join("company as c", "a.company_id", "c.id")
+        ->get();
 
-            ->whereDate("a.invoice_date", ">=", $fromDate)
-
-            ->whereDate("a.invoice_date", "<=", $toDate)
-
-            ->where("a.company_id", $request->user->active_inventory)
-            ->orderBy("a.invoice_date", "asc")
-            ->groupBy(
-                "a.id",
-                "a.invoice_date",
-                "a.invoice_no",
-                "v.name",
-                "v.gst",
-                "c.gst_no"
-            )
-
-            ->get();
-        // echo "<pre>";
-        // print_r($data);
-        // die;
-
-        return view("tally-report.purchase-report", compact("data"));
-    }
+    return view("tally-report.purchase-report", compact("data"));
+}
 
     public function saleReturnReport(Request $request)
     {

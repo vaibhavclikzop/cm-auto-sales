@@ -427,6 +427,7 @@
                     type: "POST",
                     data: {
                         id: $(this).val(),
+                        customer_id: $("#customer_id").val()
 
                     },
                     headers: {
@@ -526,6 +527,7 @@
                 qty,
                 price,
                 discount,
+                order_det_id: 0
 
             });
             console.log(products);

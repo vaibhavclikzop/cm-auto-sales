@@ -89,7 +89,8 @@ class AjaxCall extends Controller
     public function getSpecialOffer(Request $request)
     {
 
-        $special_offer = special_offer::where("product_id", $request->id)->first();
+      //  $special_offer = special_offer::where("product_id", $request->id)->first();
+       $special_offer= DB::table("products as a")->select("b.max_discount")->join("brand as b","a.brand_id","b.id")->where("a.id",$request->id)->first();
 
         $current_stock = DB::table("current_stock")
             ->select(DB::raw("SUM(stock) as stock"))
@@ -105,12 +106,12 @@ class AjaxCall extends Controller
             ->groupBy("b.product_id")
             ->first();
 
-        $customers = DB::table("customers")->where("id", $request->customer_id)->first();
-        if ($special_offer->discount<$customers->discount) {
-        $special_offer->discount =$customers->discount;
-        }
+        // $customers = DB::table("customers")->where("id", $request->customer_id)->first();
+        // if ($special_offer->discount<$customers->discount) {
+        // $special_offer->discount =$customers->discount;
+        // }
         return response()->json([
-            "specialOffer" => $special_offer->discount ?? 0,
+            "specialOffer" => $special_offer->max_discount ?? 0,
             "cs"           => $current_stock->stock ?? 0,
             "pending_qty"  => $order_mst->qty ?? 0
         ]);

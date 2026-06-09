@@ -1104,27 +1104,119 @@ class saleReport extends Controller
     {
         $fromDate = request("fromDate", date("Y-m-d"));
         $toDate = request("toDate", date("Y-m-d"));
-        $data = DB::table("sale_return_mst as a")
-            ->select(
-                "a.id",
-                "c.company as name",
-                "a.id as invoice",
-                "a.return_date as invoice_date",
-                "c.name as product",
-                "f.invoice_id as invoice_id",
-                "d.name as product",
-                "d.part_no as part_no",
-                DB::raw("sum(b.qty) as qty")
-            )
-            ->join("sale_return_det as b", "a.id", "b.mst_id")
-            ->join("customers as c", "a.customer_id", "c.id")
-            ->join("products as d", "b.product_id", "d.id")
-            ->join("stock_outward_mst as f", "a.outward_id", "f.id")
-            ->whereDate("a.return_date", ">=", $fromDate)
-            ->whereDate("a.return_date", "<=", $toDate)
-            ->where("a.company_id", $request->user->active_inventory)
-            ->groupBy("a.id", "c.name", "c.company", "a.id", "a.return_date", "d.name", "f.invoice_id", "d.name", "d.part_no")
-            ->get();
+     $data = DB::table("sale_return_mst as a")
+    ->select(
+        "a.id",
+        "c.company as customer",
+        "a.return_date as invoice_date",
+
+        "d.id as product_id",
+        "d.name as product",
+        "d.part_no",
+
+        "e.discount_type",
+        "e.invoice_id",
+
+        "f.price",
+        "f.discount as special_discount",
+
+        "g.discount",
+        "g.gst",
+
+        "b.qty"
+    )
+    ->join("sale_return_det as b", "a.id", "=", "b.mst_id")
+    ->join("customers as c", "a.customer_id", "=", "c.id")
+    ->join("products as d", "b.product_id", "=", "d.id")
+
+    ->join("stock_outward_mst as e", "a.outward_id", "=", "e.id")
+
+    ->join("stock_outward_det as f", function ($join) {
+        $join->on("f.mst_id", "=", "e.id")
+            ->on("f.product_id", "=", "b.product_id");
+    })
+
+    ->join("order_det as g", function ($join) {
+        $join->on("g.product_id", "=", "b.product_id")
+            ->on("g.mst_id", "=", "e.order_id");
+    })
+
+    ->whereDate("a.return_date", ">=", $fromDate)
+    ->whereDate("a.return_date", "<=", $toDate)
+    ->where("a.company_id", $request->user->active_inventory)
+    ->get();
+
+$report = [];
+
+foreach ($data as $item) {
+
+    // Invoice report wali exact logic
+
+    $discount_price =
+        $item->price -
+        (($item->price / 100) * $item->discount);
+
+    if ($item->discount_type == 'discount') {
+
+        $special_discount_price =
+            $discount_price -
+            (($discount_price / 100) * $item->special_discount);
+
+    } else {
+
+        $special_discount_price =
+            $item->price -
+            (($item->price / 100) *
+                ($item->discount + $item->special_discount));
+    }
+
+    $taxable_amount = $special_discount_price * $item->qty;
+
+    $gst_amount = ($taxable_amount / 100) * $item->gst;
+
+    $total_amount = $taxable_amount + $gst_amount;
+
+    $key = $item->id . '_' . $item->product_id;
+
+    if (!isset($report[$key])) {
+
+        $report[$key] = [
+            'id'             => $item->id,
+            'invoice_id'     => $item->invoice_id,
+            'invoice_date'   => $item->invoice_date,
+            'customer'       => $item->customer,
+
+            'product_id'     => $item->product_id,
+            'product'        => $item->product,
+            'part_no'        => $item->part_no,
+
+            'qty'            => 0,
+            'taxable_amount' => 0,
+            'gst_amount'     => 0,
+            'total_amount'   => 0,
+        ];
+    }
+
+    $report[$key]['qty'] += $item->qty;
+    $report[$key]['taxable_amount'] += $taxable_amount;
+    $report[$key]['gst_amount'] += $gst_amount;
+    $report[$key]['total_amount'] += $total_amount;
+}
+
+$report = array_map(function ($row) {
+
+    $row['taxable_amount'] = round($row['taxable_amount'], 2);
+    $row['gst_amount']     = round($row['gst_amount'], 2);
+    $row['total_amount']   = round($row['total_amount'], 2);
+
+    return $row;
+
+}, $report);
+
+$data = array_values($report);
+// echo "<pre>";
+// print_r($report);
+// die;
         return view("sale-return-report", compact("data"));
     }
 

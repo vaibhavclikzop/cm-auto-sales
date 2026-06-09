@@ -116,12 +116,17 @@
                                     <option value="">Select</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="">Qty</label>
                                 <input type="number" id="qty" class="form-control">
 
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2 d-none">
+                                <label for="">Discount (%)</label>
+                                <input type="number" step="0.01" value="0" id="discount" class="form-control">
+
+                            </div>
+                            <div class="col-md-2">
                                 <label for="">Add</label> <br>
                                 <button class="btn btn-primary" type="button" id="btnAdd">Add</button>
 
@@ -142,13 +147,45 @@
                                     <th>Actual Qty</th>
                                     <th>Received Qty</th>
                                     <th>Qty</th>
+                                    <th>Purchase Price</th>
                                     <th>Price</th>
+                                    <th>Difference</th>
+
+                                    <th>Taxable</th>
+                                    <th>GST</th>
+
+                                    <th>Total Amount</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="productList">
 
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="13" style="text-align: right">Discount %</td>
+                                    <td colspan="2"> <input type="number" id="totalDiscount" name="totalDiscount"
+                                            step="0.01" value="0"> </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="13" style="text-align: right">
+                                        <select name="adj_amt_type" id="adj_amt_type">
+                                            <option value="">Type</option>
+                                            <option value="debit">debit</option>
+                                            <option value="credit">credit</option>
+                                        </select>
+                                    </td>
+                                    <td colspan="2"> <input type="number" id="adj_amt" name="adj_amt"
+                                            step="0.01" value="0"> </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="13" style="text-align: right">
+                                        <Strong>Total</Strong>
+                                    </td>
+                                    <td colspan="2"> <span id="total">0</span> </td>
+                                </tr>
+
+                            </tfoot>
                             <input type="hidden" id="prod_list" name="prod_list">
                         </table>
 
@@ -169,7 +206,7 @@
     </div>
     <script>
         $(document).ready(function() {
-            $("select").select2()
+            $("#vendor_id, #po_id, #warehouse_id, #location_id, #product_id").select2()
 
             function getRandomColor() {
                 let letters = '0123456789ABCDEF';
@@ -331,7 +368,7 @@
 
             $("#btnAdd").on("click", function() {
 
-                var row = "";
+
 
                 let brand = $("#brand_id").find(":selected").text();
                 let product_id = parseInt($("#product_id").val());
@@ -339,7 +376,22 @@
                 let part_no = $("#product_id").find(":selected").data("article_code");
                 let price = $("#product_id").find(":selected").data("price");
                 let qty = $("#qty").val();
+                let discount = $("#discount").val();
                 let product_location = $("#product_id").find(":selected").data("product_location");
+
+
+
+                addProduct(brand, product_id, product_name, part_no, price, qty, discount,
+                    product_location);
+
+
+
+            });
+
+
+            function addProduct(brand, product_id, product_name, part_no, purchase_price, qty, discount,
+                product_location, price, gst) {
+                var row = "";
                 let exists = product_list.some(item => item.id == sno);
 
                 if (exists) {
@@ -349,23 +401,46 @@
 
 
                 row += `
-                            <tr class="product${sno}">
-                            <td>${sno}</td>
-                            <td >${brand}</td>
-                            <td >${product_name}</td>
-                            <td >${product_location}</td>
-                            <td>${part_no}</td>
-                            <td>NA</td>
-                            <td>NA</td>
-                           
-                   
-                                <td>${qty}</td>
-            
-                                <td>${price}</td>
-                              
-                                <td><button class="btn btn-sm btn-danger remove" type="button" data-id="${sno}" ><i class="fa fa-trash" aria-hidden="true"></i></button></td>   
-                            </tr>
-                             `;
+<tr class="product${sno}">
+    <td>${sno}</td>
+    <td>${brand}</td>
+    <td style="white-space: normal; word-wrap: break-word;">
+        ${product_name}
+    </td>
+    <td>${product_location}</td>
+    <td>${part_no}</td>
+    <td>NA</td>
+    <td>NA</td>
+    <td>${qty}</td>
+    <td class="purchase-price">${purchase_price}</td>
+
+    <td>
+        <input
+            style="width:150px"
+            type="number"
+            step="0.01"
+            class="form-control updatePrice"
+            data-id="${sno}"
+            value="${price}">
+    </td>
+
+    <td class="price-difference">${parseFloat(purchase_price - price).toFixed(2)}</td>
+
+    <td class="line-total">${parseFloat(price * qty).toFixed(2)}</td>
+
+    <td class="gst">${gst}</td>
+
+    <td class="grand-total">
+        ${parseFloat((price * qty) + ((price * qty * gst) / 100)).toFixed(2)}
+    </td>
+
+    <td>
+        <button class="btn btn-sm btn-danger remove" type="button" data-id="${sno}">
+            <i class="fa fa-trash"></i>
+        </button>
+    </td>
+</tr>
+`;
 
 
 
@@ -374,24 +449,24 @@
                     product_id,
                     qty,
                     price,
+                    discount,
+                    gst,
+                    purchase_price
 
 
                 });
                 sno++;
-
+                calculateFooterTotal();
                 $('#productList').append(row);
                 console.log(product_list);
-
-
-
-            });
+            }
 
             $(document).on("click", ".remove", function() {
                 let id = parseInt($(this).data("id"))
 
                 $(`.product${id}`).remove();
                 product_list = product_list.filter(item => item.id !== id);
-                console.log(product_list);
+                calculateFooterTotal();
 
             });
 
@@ -417,6 +492,79 @@
 
                 $("#formMain").submit();
             })
+
+            $("#totalDiscount").on("keyup", function() {
+                calculateFooterTotal();
+            })
+
+            $("#adj_amt_type").on("change", function() {
+                calculateFooterTotal();
+            })
+            $("#adj_amt").on("keyup", function() {
+                calculateFooterTotal();
+            })
+
+
+            function calculateFooterTotal() {
+                let totalQty = 0;
+                let totalAmount = 0;
+                let totalGst = 0;
+
+                product_list.forEach(function(item) {
+                    const qty = parseFloat(item.qty) || 0;
+                    const price = parseFloat(item.price) || 0;
+                    const gst = parseFloat(item.gst) || 0;
+
+                    totalQty += qty;
+                    totalAmount += qty * (price + (price * gst / 100));
+                });
+                let discount = parseFloat($("#totalDiscount").val())
+                let type = $("#adj_amt_type").val();
+                let adj_amt = parseFloat($("#adj_amt").val())
+                totalAmount = totalAmount - totalAmount / 100 * discount;
+                if (type == "credit") {
+                    totalAmount = totalAmount + adj_amt;
+                } else if (type == "debit") {
+                    totalAmount = totalAmount - adj_amt;
+                } else {
+                    $("#adj_amt").val(0)
+                }
+
+                $("#total").text(totalAmount)
+
+            }
+            $(document).on('keyup', '.updatePrice', function() {
+                let id = $(this).data('id');
+                let price = parseFloat($(this).val()) || 0;
+
+                let product = product_list.find(item => item.id == id);
+
+                if (product) {
+
+                    product.price = price;
+
+                    let qty = parseFloat(product.qty) || 0;
+                    let gst = parseFloat(product.gst) || 0;
+                    let purchasePrice = parseFloat(product.purchase_price) || 0;
+
+                    let lineTotal = qty * price;
+                    let grandTotal = lineTotal + (lineTotal * gst / 100);
+                    let difference = price - purchasePrice;
+
+                    let row = $(this).closest('tr');
+
+                    row.find('.price-difference').text(difference.toFixed(2));
+                    row.find('.line-total').text(lineTotal.toFixed(2));
+                    row.find('.grand-total').text(grandTotal.toFixed(2));
+                    console.log(product);
+                    console.log(price);
+                    console.log(purchasePrice);
+                }
+
+
+                calculateFooterTotal();
+            });
+
             $(document).on("keyup", '.qty', function() {
                 var product_id = parseInt($(this).data("product_id"))
 
@@ -461,8 +609,6 @@
                 }
 
             })
-
-
 
 
 
@@ -524,42 +670,24 @@
                             let sno = 1;
                             data = JSON.parse(result)
                             data.data.forEach(element => {
-                                row += `
-                            <tr class="prod${element.id}">
-                            <td>${sno++}</td>
-                            <td >${element.brand_name}</td>
-                            <td >${element.name}</td>
-                            <td >${element.product_location}</td>
-                            <td>${element.part_no}</td>
-                            <td>NA</td>
-                            <td>NA</td>
-                           
-                   
-                                <td>${element.qty}</td>
-            
-                                <td>${element.purchase_price}</td>
-                              
-                                <td><button onclick="removeItem(${element.qty})" class="btn btn-sm btn-danger" type="button"><i class="fa fa-trash" aria-hidden="true"></i></button></td>
-                            </tr>
-                             `;
 
+                                let brand = element.brand_name;
                                 let product_id = element.id;
+                                let product_name = element.name;
+                                let part_no = element.part_no;
+                                let purchase_price = element.purchase_price;
+                                let price = element.price;
                                 let qty = element.qty;
-                                let price = element.purchase_price;
-                                let gst = element.gst;
-                                let id = element.id;
-                                product_list.push({
-                                    id,
-                                    product_id,
-                                    qty,
-                                    price,
+                                let discount = 0;
+                                let product_location = element.product_location;
+                                let gst = 18;
+                                addProduct(brand, product_id, product_name, part_no,
+                                    purchase_price, qty, discount, product_location,
+                                    price, gst)
 
 
-                                });
+
                             });
-
-                            $('#productList').append(row);
-                            console.log(product_list);
 
                         },
                         error: function(data) {

@@ -255,15 +255,11 @@
                                 @endphp
                                 @foreach ($order_det as $item)
                                     @php
-
                                         $price = $item->price;
                                         $discount_type = $item->discount . '% ';
                                         $taxable_amount = $price - ($price * $item->discount) / 100;
-
                                         $taxable_amount = $item->qty * $taxable_amount;
-
                                         $gst_amount = ($taxable_amount * 18) / 100;
-
                                         $total_amount = $taxable_amount + $gst_amount;
                                         $sub_total += $total_amount;
                                         $total_taxable_amount += $taxable_amount;

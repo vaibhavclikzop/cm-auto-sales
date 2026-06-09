@@ -13,17 +13,103 @@ class SaleReturn extends Controller
     public function SaleReturnList(Request $request)
     {
         $customers =  DB::table("customers")->get();
-        $data =  DB::table("sale_return_mst as a")
-            ->select("a.*", "b.company as customer", "d.order_id", "e.name as user", "c.outward_id")
-            ->join("customers as b", "a.customer_id", "b.id")
-            ->join("stock_outward_mst as c", "a.outward_id", "c.id")
-            ->join("order_mst as d", "c.order_id", "d.id")
-            ->join("users as e", "a.user_id", "e.id")
-            ->join("company as f", "a.company_id", "f.id")
-            ->orderBy("a.id", "desc")
+       
+
+
+        $mstRecords = DB::table("sale_return_mst as a")
+            ->select(
+                "a.id",
+                "b.company as customer",
+                "f.invoice_id",
+                "f.discount_type","a.return_date","a.description"
+            )
+            ->join("customers as b", "a.customer_id", "=", "b.id")
+            ->join("stock_outward_mst as f", "a.outward_id", "=", "f.id")
+            ->orderByDesc("a.id")
+              ->where("a.company_id", $request->user->active_inventory)
             ->get();
 
-        return view("sale-return", compact("customers", "data"));
+        $report = [];
+
+        foreach ($mstRecords as $mst) {
+
+            $po_det = DB::table("sale_return_det as a")
+                ->select(
+                    "a.*",
+                    "f.price",
+                    "g.discount",
+                    "f.discount as special_discount",
+                    "g.gst"
+                )
+                ->join("sale_return_mst as d", "a.mst_id", "=", "d.id")
+                ->join("stock_outward_mst as e", "d.outward_id", "=", "e.id")
+                ->join("stock_outward_det as f", function ($join) {
+                    $join->on("f.mst_id", "=", "e.id")
+                        ->on("f.product_id", "=", "a.product_id");
+                })
+                ->join("order_det as g", function ($join) {
+                    $join->on("g.product_id", "=", "a.product_id")
+                        ->on("g.mst_id", "=", "e.order_id");
+                })
+                ->where("a.mst_id", $mst->id)
+                ->get();
+
+            $total_tx_amt = 0;
+            $total_gst = 0;
+            $sub_total = 0;
+            $total_qty = 0;
+
+            foreach ($po_det as $item) {
+
+                // Invoice print wali exact logic
+                $discount_price =
+                    $item->price -
+                    (($item->price / 100) * $item->discount);
+
+                if ($mst->discount_type == 'discount') {
+
+                    $special_discount_price =
+                        $discount_price -
+                        (($discount_price / 100) * $item->special_discount);
+                } else {
+
+                    $special_discount_price =
+                        $item->price -
+                        (($item->price / 100) *
+                            ($item->discount + $item->special_discount));
+                }
+
+                $taxable_amount = $special_discount_price * $item->qty;
+
+                $gst_amount = ($taxable_amount / 100) * $item->gst;
+
+                $total_amount = $taxable_amount + $gst_amount;
+
+                $total_tx_amt += $taxable_amount;
+                $total_gst += $gst_amount;
+                $sub_total += $total_amount;
+                $total_qty += $item->qty;
+            }
+
+            $report[] = [
+                'id' => $mst->id,
+                'return_date' => $mst->return_date,
+                'customer'       => $mst->customer,
+                'description'       => $mst->description,
+                'invoice_id'     => $mst->invoice_id,
+                'qty'            => $total_qty,
+                'taxable_amount' => round($total_tx_amt, 2),
+                'gst_amount'     => round($total_gst, 2),
+                'total_amount'   => round($sub_total, 2),
+                'round_off'      => round($sub_total),
+            ];
+        }
+
+        // echo "<pre>";
+        // print_r($report);
+        // die;
+
+        return view("sale-return", compact("customers", "report"));
     }
 
     public function GetOutwardChallan(Request $request)
@@ -150,10 +236,10 @@ class SaleReturn extends Controller
                     ->on("f.product_id", "=", "a.product_id");
             })
 
-               ->join("order_det as g", function ($join) {
-        $join->on("g.product_id", "=", "a.product_id")
-             ->on("g.mst_id", "=", "e.order_id"); // 🔥 fix here
-    })
+            ->join("order_det as g", function ($join) {
+                $join->on("g.product_id", "=", "a.product_id")
+                    ->on("g.mst_id", "=", "e.order_id"); // 🔥 fix here
+            })
 
             ->where("a.mst_id", $id)
             ->get();

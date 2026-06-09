@@ -22,10 +22,13 @@
                         <th>S.no</th>
                         <th> Customer</th>
                         <th> Order ID</th>
-                        <th> PT ID</th>
+
                         <th> Return Date</th>
                         <th> Description</th>
-                        <th> User</th>
+                        <th> Taxable Amount</th>
+                        <th> GST Amount</th>
+                        <th> Total Amount</th>
+
 
 
                         <th>Action</th>
@@ -36,18 +39,23 @@
                     @php
                         $sno = 1;
                     @endphp
-                    @foreach ($data as $item)
+                    @foreach ($report as $item)
                         <tr>
                             <td>{{ $sno++ }}</td>
-                            <td>{{ $item->customer }}</td>
-                            <td>{{ $item->order_id }}</td>
-                            <td>{{ $item->outward_id }}</td>
-                            <td>{{ $item->return_date }}</td>
-                            <td>{{ $item->description }}</td>
-                            <td>{{ $item->user }}</td>
+                            <td style="max-width:200px; white-space: normal;">
+                                {{ $item['customer'] }}
+                            </td>
+                            <td>{{ $item['invoice_id'] }}</td>
+
+                            <td>{{ $item['return_date'] }}</td>
+                            <td style="max-width:200px; white-space: normal;">{{ $item['description'] }}</td>
+                            <td>{{ $item['taxable_amount'] }}</td>
+                            <td>{{ $item['gst_amount'] }}</td>
+                            <td>{{ $item['total_amount'] }}</td>
+
                             <td>
 
-                                <a class="btn btn-sm btn-primary" href="/sale-return-challan-view/{{ $item->id }}"> <i
+                                <a class="btn btn-sm btn-primary" href="/sale-return-challan-view/{{ $item['id'] }}"> <i
                                         class="fa fa-eye" aria-hidden="true"></i></a>
                             </td>
                         </tr>

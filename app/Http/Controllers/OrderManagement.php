@@ -390,23 +390,23 @@ class OrderManagement extends Controller
         $totalOrderValue  = $orders->sum('order_value');
         $totalPtValue  = $orders->sum('pt_value');
         $totalPendingOrderValue = $totalOrderValue - $totalPtValue;
-      $inStockSubQuery = DB::table('order_det as od')
-    ->join('order_mst as om', 'om.id', '=', 'od.mst_id')  
-    ->join('current_stock as cs', 'cs.product_id', '=', 'od.product_id')
-    ->where('od.is_delete', 0)
-    ->where('om.status', $status) 
-    // OR ->where('om.status', 1)
-    ->groupBy('od.product_id', 'cs.stock')
-    ->selectRaw('
+        $inStockSubQuery = DB::table('order_det as od')
+            ->join('order_mst as om', 'om.id', '=', 'od.mst_id')
+            ->join('current_stock as cs', 'cs.product_id', '=', 'od.product_id')
+            ->where('od.is_delete', 0)
+            ->where('om.status', $status)
+            // OR ->where('om.status', 1)
+            ->groupBy('od.product_id', 'cs.stock')
+            ->selectRaw('
         od.product_id,
         MAX(od.price) as price,
         LEAST(SUM(od.qty - od.out_qty), cs.stock) as final_qty
     ');
 
-$totalStockValue = DB::query()
-    ->fromSub($inStockSubQuery, 't')
-    ->selectRaw('SUM(final_qty * price) as total')
-    ->value('total');
+        $totalStockValue = DB::query()
+            ->fromSub($inStockSubQuery, 't')
+            ->selectRaw('SUM(final_qty * price) as total')
+            ->value('total');
 
         return view("orders", compact(
             "orders",
@@ -772,6 +772,7 @@ $totalStockValue = DB::query()
                 $part_no = $record[1];
                 $name    = $record[2];
                 $qty     = $record[3];
+                $price     = $record[4];
 
                 $products = DB::table("products as a")
                     ->select("a.*", "b.name as brand_name")
@@ -786,6 +787,10 @@ $totalStockValue = DB::query()
                         'qty' => $qty,
                         'purchase_price' => $products->purchase_price,
                         'gst' => $products->gst,
+                        'brand_name' => $products->brand_name,
+                        'product_location' => $products->product_location,
+                        'price' => $price,
+                        'gst' => $products->gst,
                         'found' => true
                     ];
                 } else {
@@ -797,8 +802,12 @@ $totalStockValue = DB::query()
                         'part_no' => $part_no,
                         'qty' => $qty,
                         'purchase_price' => null,
+                        "brand_name" => null,
                         'gst' => null,
-                        'found' => false
+                        'found' => false,
+                        'product_location' => null,
+                        'price' => 0,
+                        'gst' => 0,
                     ];
                 }
 

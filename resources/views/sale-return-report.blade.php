@@ -42,6 +42,9 @@
                         <th>Return Date</th>
            
                         <th> Return Qty</th>
+                        <th> Taxable Amt.</th>
+                        <th> GST Amt.</th>
+                        <th> Total Amt.</th>
 
                     </tr>
                 </thead>
@@ -53,16 +56,19 @@
                         <tr>
                             <td>{{ $sno++ }}</td>
 
-                            <td style="max-width:150px; white-space: normal; word-break: break-word;">{{ $item->name }}
+                            <td style="max-width:150px; white-space: normal; word-break: break-word;">{{ $item["customer"] }}
                             </td>
-                            <td>{{ $item->part_no }}</td>
-                            <td>{{ $item->product }}</td>
-                            <td>{{ $item->invoice_id }}</td>
-                            <td>{{ $item->invoice }}</td>
-                            <td>{{ $item->invoice_date }}</td>
+                            <td>{{ $item["part_no"] }}</td>
+                            <td style="  white-space: normal; word-break: break-word;">{{ $item["product"] }}</td>
+                            <td>{{ $item["invoice_id"] }}</td>
+                            <td>{{ $item["id"] }}</td>
+                            <td>{{ $item["invoice_date"] }}</td>
                          
 
-                            <td>{{ $item->qty }}</td>
+                            <td>{{ $item["qty"] }}</td>
+                            <td>{{ $item["taxable_amount"] }}</td>
+                            <td>{{ $item["gst_amount"] }}</td>
+                            <td>{{ $item["total_amount"] }}</td>
 
                         </tr>
                     @endforeach

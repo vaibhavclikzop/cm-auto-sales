@@ -59,7 +59,7 @@ class InwardStock extends Controller
             $exits = DB::table("stock_inward_mst")->where("company_id", $request->user->active_inventory)
                 ->where("invoice_no", $request->invoice_no)->exists();
             if ($exits) {
-                return redirect()->back()->with('error', "Invoice np. already added");
+                return redirect()->back()->with('error', "Invoice no. already added");
             }
 
             $mst_id = DB::table('stock_inward_mst')->insertGetId(array(
@@ -72,6 +72,9 @@ class InwardStock extends Controller
                 "description" => $request->description,
                 "user_id" => $request->user->id,
                 "company_id" => $request->user->active_inventory,
+                "adj_amt_type"=>$request->adj_amt_type,
+                "adj_amt"=>$request->adj_amt,
+                "discount"=>$request->totalDiscount,
 
 
             ));
@@ -83,6 +86,7 @@ class InwardStock extends Controller
                     "product_id" => $value->product_id,
                     "qty" => $value->qty,
                     "price" => $value->price,
+                    "discount" => $value->discount,
 
                 ));
 

@@ -136,7 +136,7 @@ class PurchaseOrder extends Controller
     public function PurchaseOrderView(Request $request, $id)
     {
         $data = DB::table("po_mst as a")
-            ->select("a.*", "b.name as vendor_name", "b.number as vendor_number", "b.email as vendor_email", "b.address as vendor_address", "b.state as vendor_state", "b.city as vendor_city", "b.pincode as vendor_pincode", "b.gst as vendor_gst", "b.company as company", "c.*")
+            ->select("a.*","a.created_at", "b.name as vendor_name", "b.number as vendor_number", "b.email as vendor_email", "b.address as vendor_address", "b.state as vendor_state", "b.city as vendor_city", "b.pincode as vendor_pincode", "b.gst as vendor_gst", "b.company as company", "c.name","c.img","c.address","c.number","c.email","c.gst_no","c.state")
             ->join("vendor as b", "a.vendor_id", "b.id")
             ->join("company as c", "a.company_id", "c.id")
             ->where("a.id", $id)->first();

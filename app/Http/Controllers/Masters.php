@@ -563,11 +563,12 @@ class Masters extends Controller
             if (empty($request->id)) {
                 DB::table('brand')->insertGetId(array(
                     "name" => $request->name,
+                    "max_discount" => $request->max_discount,
                 ));
             } else {
                 DB::table('brand')->where("id", $request->id)->update(array(
                     "name" => $request->name,
-
+                    "max_discount" => $request->max_discount,
                 ));
             }
         } catch (Exception $e) {

@@ -269,7 +269,7 @@
                                     style="border: solid 1px; padding: 3px;  text-transform: uppercase;font-size:11px;color:black;; text-align: right">
                                     {{ $item->special_discount }}
                                 </td>
-                    --}}
+                                --}}
                                 {{-- @endif--}}
 
                                 <td
